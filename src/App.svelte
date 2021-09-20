@@ -1,6 +1,9 @@
 <script lang="ts">
   import { Styles } from 'sveltestrap'
+  import { link } from 'svelte-spa-router'
   import Counter from './lib/Counter.svelte'
+
+  import Router from './Routes.svelte'
 </script>
 
 <Styles />
@@ -10,13 +13,13 @@
 
   <Counter />
 
-  <p>
-    Visit <a href="https://svelte.dev">svelte.dev</a> to learn how to build Svelte
-    apps.
-  </p>
+  <nav>
+    <a use:link href="/">Home</a>
+    <a use:link href="/part-list">Part List</a>
+    <a use:link href="/partner-list">Partner List</a>
+  </nav>
 
-  <p>
-    Check out <a href="https://github.com/sveltejs/kit#readme">SvelteKit</a> for
-    the officially supported framework, also powered by Vite!
-  </p>
+  <hr>
+
+  <Router />
 </main>
