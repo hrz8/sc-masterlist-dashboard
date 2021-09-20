@@ -12,7 +12,7 @@
 </script>
 
 <div id="sidebar-wrapper" class="d-flex flex-column flex-shrink-0">
-  <a use:link href="/" id="sidebar-app" class="bg-dark bg-gradient text-light text-center p-3 link-dark text-decoration-none">
+  <a use:link href="/" class="bg-dark bg-gradient text-light text-center p-3 link-dark text-decoration-none">
     <Icon class="h3" name="house-door" />
   </a>
   <ul class="nav nav-pills nav-flush flex-column mb-auto text-center">
