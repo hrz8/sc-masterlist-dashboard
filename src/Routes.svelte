@@ -16,4 +16,6 @@
   }
 </script>
 
-<Router {routes} />
+<div class="mx-3 container-fluid">
+  <Router {routes} />
+</div>
