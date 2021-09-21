@@ -60,7 +60,10 @@
       aria-expanded="false">
       <i class="h4 bi-person-circle"></i>
     </a>
-    <ul class="dropdown-menu text-small shadow" aria-labelledby="sidebar-dropdown-account">
+    <ul
+      class="dropdown-menu text-small shadow"
+      aria-labelledby="sidebar-dropdown-account"
+    >
       <li>
         <h6 class="dropdown-header">Account</h6>
       </li>
