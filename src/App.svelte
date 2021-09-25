@@ -9,10 +9,10 @@
     endpoints as masterlistEndpoints,
     BASE_URL as MASTERLIST_BASE_URL
   } from './services/rest/endpoints/masterlist-service';
+  setContext('masterlistService', new RestAPI(MASTERLIST_BASE_URL, masterlistEndpoints))
 
-  onMount(() => {
-    setContext('masterlistService', new RestAPI(MASTERLIST_BASE_URL, masterlistEndpoints))
-  })
+  // onMount(() => {
+  // })
 </script>
 
 <Styles />

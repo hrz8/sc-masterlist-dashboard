@@ -1,7 +1,7 @@
 import { HTTPMethod } from '../methods'
 import type { EndpointMap } from '../service'
 
-export const BASE_URL = 'localhost:3999'
+export const BASE_URL = 'http://localhost:3999/api'
 
 export const endpoints: EndpointMap = {
   partner: {

@@ -1,5 +1,12 @@
-<script>
+<script lang="ts">
+  import type { RestAPI } from 'src/services/rest/service'
+
+  import { getContext, onMount } from 'svelte';
+
   import Select from 'svelte-select'
+
+  const masterlistService = (getContext('masterlistService')) as RestAPI
+
   let items = [
     {value: 'chocolate', label: 'Chocolate'},
     {value: 'pizza', label: 'Pizza'},
@@ -14,6 +21,15 @@
     console.log('selected item', event.detail);
     // .. do something here 🙂
   }
+
+  onMount(async () => {
+    const { message } = await masterlistService.call('partner.detail', {
+      params: {
+        id: 'a3fd278a-2fec-46da-8910-e475fc83086d'
+      }
+    })
+    console.log(message);
+  })
 </script>
 
 <h1>

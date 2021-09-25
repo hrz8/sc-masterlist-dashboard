@@ -8,6 +8,13 @@ export type EndpointPayload = {
   query?: Record<string, any>,
   data?: Record<string, any>
 }
+export type EndpointResponse = {
+  data: Record<string, any>,
+  message: string,
+  meta: Record<string, any>,
+  status: number,
+  errorCode?: string
+}
 
 export class RestAPI {
   private _baseUrl: string
@@ -30,8 +37,8 @@ export class RestAPI {
 
   public async call(
     endpointPath: string,
-    payload: EndpointPayload
-  ) {
+    payload?: EndpointPayload
+  ): Promise<EndpointResponse> {
     const [domainName, actionName] = endpointPath.split('.')
     const endpointmap = this._endpoints[domainName][actionName]
 
@@ -44,22 +51,21 @@ export class RestAPI {
     } as RequestInit
 
     // parse params
-    if (payload.params) {
+    if (payload?.params) {
       endpointmap.url = this.paramsBuilder(endpointmap.url, payload.params)
     }
 
     // parse query
-    if (payload.query) {
+    if (payload?.query) {
       endpointmap.url = this.queryParamsBuilder(endpointmap.url, payload.query)
     }
 
     // parse body
-    if (payload.data) {
+    if (payload?.data) {
       requestOptions.body = JSON.stringify(payload.data)
     }
 
-    const response = await fetch(`${this._baseUrl}/${endpointmap.url}`, requestOptions)
-
-    console.log("response", response)
+    const response = await fetch(`${this._baseUrl}${endpointmap.url}`, requestOptions).then((res) => res.json())
+    return response as EndpointResponse
   }
 }
