@@ -1,4 +1,4 @@
-import 'bootstrap/dist/js/bootstrap.bundle'
+import 'bootstrap/dist/js/bootstrap.bundle.min'
 import App from './App.svelte'
 
 const app = new App({
