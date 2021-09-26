@@ -66,19 +66,19 @@ import type PartnerType from 'src/types/domains/PartnerType';
   <div class="card-body">
     <form on:submit|preventDefault={handleFormSubmit} class="row g-3">
       <div class="col-md-4">
-        <label for="validationName" class="form-label">Name</label>
-        <input type="text" class="form-control" id="validationName" value={activeDetail?.name || ""} required>
+        <label for="inputName" class="form-label">Name</label>
+        <input type="text" class="form-control" id="inputName" value={activeDetail?.name || ""} required>
       </div>
       <div class="col-md-4">
-        <label for="validationAddress" class="form-label">Address</label>
-        <input type="text" class="form-control" id="validationAddress" value={activeDetail?.address || ""}>
+        <label for="inputAddress" class="form-label">Address</label>
+        <input type="text" class="form-control" id="inputAddress" value={activeDetail?.address || ""}>
       </div>
       <div class="col-md-4">
-        <label for="validationContact" class="form-label">Contact</label>
-        <input type="text" class="form-control" id="validationContact" value={activeDetail?.contact || ""} required>
+        <label for="inputContact" class="form-label">Contact</label>
+        <input type="text" class="form-control" id="inputContact" value={activeDetail?.contact || ""} required>
       </div>
-      <div class="col-md-4">
-        <label for="validationContact" class="form-label">Type</label>
+      <div class="col-md-12">
+        <label for="selectType" class="form-label">Type</label>
         <Select
           items={
             partnerTypes.map((o) => ({ value: o.id, label: o.name }))
@@ -92,6 +92,10 @@ import type PartnerType from 'src/types/domains/PartnerType';
           isMulti={true}
           isClearable={false}
         ></Select>
+      </div>
+      <div class="col-md-12">
+        <label for="inputDescription" class="form-label">Description</label>
+        <textarea class="form-control" id="inputDescription" rows="3" value={activeDetail?.description || ""}></textarea>
       </div>
       <div class="col-12">
         <button class="btn btn-primary" type="submit">{activeDetail ? 'Update' : 'Add'}</button>
@@ -131,8 +135,8 @@ import type PartnerType from 'src/types/domains/PartnerType';
               <td class="text-nowrap">{ item.address }</td>
               <td class="text-nowrap">{ item.contact }</td>
               <td class="text-nowrap">{ item.description }</td>
-              <td class="text-nowrap">{ dayjs(item.createdAt).format('DD/MM/YYYY HH:mm:ss') }</td>
-              <td class="text-nowrap">{ dayjs(item.updatedAt).format('DD/MM/YYYY HH:mm:ss') }</td>
+              <td class="text-nowrap text-muted">{ dayjs(item.createdAt).format('DD/MM/YYYY HH:mm:ss') }</td>
+              <td class="text-nowrap text-muted">{ dayjs(item.updatedAt).format('DD/MM/YYYY HH:mm:ss') }</td>
             </tr>
           {/each}
         </tbody>
