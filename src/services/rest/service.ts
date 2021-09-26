@@ -40,7 +40,7 @@ export class RestAPI {
     payload?: EndpointPayload
   ): Promise<EndpointResponse<T>> {
     const [domainName, actionName] = endpointPath.split('.')
-    const endpointmap = this._endpoints[domainName][actionName]
+    const endpointmap = Object.assign({}, this._endpoints[domainName][actionName])
 
     const requestOptions = {
       method: endpointmap.method,
