@@ -2,16 +2,20 @@
   import dayjs from 'dayjs';
   import type { RestAPI } from "src/services/rest/service";
   import type Partner from "src/types/domains/Partner";
+import type PartnerType from 'src/types/domains/PartnerType';
 
   import { getContext, onMount } from "svelte";
 
   import Select from "svelte-select";
-import active from 'svelte-spa-router/active';
 
   const masterlistService = getContext("masterlistService") as RestAPI;
 
+  // domain props
   let activeList = [] as Partner[]
   let activeDetail = null as Partner
+
+  // external domain props
+  let partnerTypes = [] as PartnerType[]
 
   let items = [
     { value: "chocolate", label: "Chocolate" },
@@ -21,11 +25,10 @@ import active from 'svelte-spa-router/active';
     { value: "ice-cream", label: "Ice Cream" },
   ];
 
-  let value = { value: "cake", label: "Cake" };
+  let value = [{ value: "cake", label: "Cake" }];
 
   function handleSelect(event: any) {
     console.log("selected item", event.detail);
-    // .. do something here
   }
 
   function handleFormSubmit() {
@@ -43,12 +46,14 @@ import active from 'svelte-spa-router/active';
 
   onMount(async () => {
     // fetch item list
-    const { data } = await masterlistService.call<Partner[]>("partner.list");
-    activeList = data
+    ({ data: activeList } = await masterlistService.call<Partner[]>("partner.list"));
+    ({ data: partnerTypes } = await masterlistService.call<Partner[]>("partnerType.list"))
   });
 </script>
 
 <h1>Partner</h1>
+
+<!-- FORM -->
 <div class="card mb-3">
   <div class="card-header">
     {#if activeDetail}
@@ -63,17 +68,30 @@ import active from 'svelte-spa-router/active';
       <div class="col-md-4">
         <label for="validationName" class="form-label">Name</label>
         <input type="text" class="form-control" id="validationName" value={activeDetail?.name || ""} required>
-        <div class="valid-feedback">Nice!</div>
       </div>
       <div class="col-md-4">
         <label for="validationAddress" class="form-label">Address</label>
         <input type="text" class="form-control" id="validationAddress" value={activeDetail?.address || ""}>
-        <div class="valid-feedback">Nice!</div>
       </div>
       <div class="col-md-4">
         <label for="validationContact" class="form-label">Contact</label>
         <input type="text" class="form-control" id="validationContact" value={activeDetail?.contact || ""} required>
-        <div class="valid-feedback">Nice!</div>
+      </div>
+      <div class="col-md-4">
+        <label for="validationContact" class="form-label">Type</label>
+        <Select
+          items={
+            partnerTypes.map((o) => ({ value: o.id, label: o.name }))
+          }
+          value={
+            !activeDetail
+              ? []
+              : activeDetail.partnerTypes.map((o) => ({ value: o.id, label: o.name }))
+          }
+          on:select={handleSelect}
+          isMulti={true}
+          isClearable={false}
+        ></Select>
       </div>
       <div class="col-12">
         <button class="btn btn-primary" type="submit">{activeDetail ? 'Update' : 'Add'}</button>
@@ -85,6 +103,7 @@ import active from 'svelte-spa-router/active';
   </div>
 </div>
 
+<!-- TABLE -->
 <div class="card mb-3">
   <div class="card-header">
     <span class="badge bg-primary">List</span> Partner
@@ -123,4 +142,3 @@ import active from 'svelte-spa-router/active';
 </div>
 
 
-<!-- <Select {items} {value} on:select={handleSelect} isClearable={false}></Select> -->
