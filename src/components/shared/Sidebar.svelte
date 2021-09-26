@@ -49,6 +49,16 @@
       </a>
       <Tooltip target="sidebar-partner-list" placement="right">Partner List</Tooltip>
     </li>
+    <li>
+      <a
+        id="sidebar-material-list"
+        use:link
+        use:active={{path: '/material-list*', className: 'active'}}
+        href="/material-list"  class="nav-link py-3 border-bottom">
+        <Icon class="h4" name="gear-wide-connected" />
+      </a>
+      <Tooltip target="sidebar-material-list" placement="right">Material List</Tooltip>
+    </li>
   </ul>
   <div class="dropdown border-top" style="position: unset;">
     <a
@@ -89,7 +99,6 @@
 
 <style>
 #sidebar-wrapper {
-  width: 4.5em;
   height: 100vh;
   overflow-y: auto;
   box-shadow: 0 0.125em 0.5em rgb(0 0 0 / 15%);

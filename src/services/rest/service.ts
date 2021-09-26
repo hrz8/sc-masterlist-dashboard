@@ -8,8 +8,8 @@ export type EndpointPayload = {
   query?: Record<string, any>,
   data?: Record<string, any>
 }
-export type EndpointResponse = {
-  data: Record<string, any>,
+export type EndpointResponse<T> = {
+  data: T,
   message: string,
   meta: Record<string, any>,
   status: number,
@@ -35,10 +35,10 @@ export class RestAPI {
     return `${urlPath}?${qs.stringify(payloadQueryParams, { encodeValuesOnly: true })}`
   }
 
-  public async call(
+  public async call<T>(
     endpointPath: string,
     payload?: EndpointPayload
-  ): Promise<EndpointResponse> {
+  ): Promise<EndpointResponse<T>> {
     const [domainName, actionName] = endpointPath.split('.')
     const endpointmap = this._endpoints[domainName][actionName]
 
@@ -66,6 +66,6 @@ export class RestAPI {
     }
 
     const response = await fetch(`${this._baseUrl}${endpointmap.url}`, requestOptions).then((res) => res.json())
-    return response as EndpointResponse
+    return response as EndpointResponse<T>
   }
 }

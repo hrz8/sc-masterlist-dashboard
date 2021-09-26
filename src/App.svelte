@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, setContext } from 'svelte';
+  import { setContext } from 'svelte';
   import { Styles } from 'sveltestrap'
 
   import Router from './Routes.svelte'
@@ -9,10 +9,9 @@
     endpoints as masterlistEndpoints,
     BASE_URL as MASTERLIST_BASE_URL
   } from './services/rest/endpoints/masterlist-service';
-  setContext('masterlistService', new RestAPI(MASTERLIST_BASE_URL, masterlistEndpoints))
 
-  // onMount(() => {
-  // })
+  // initialize service
+  setContext('masterlistService', new RestAPI(MASTERLIST_BASE_URL, masterlistEndpoints))
 </script>
 
 <Styles />
@@ -25,7 +24,6 @@
 <style>
   main {
     display: flex;
-    flex-wrap: nowrap;
     height: 100vh;
     height: -webkit-fill-available;
     max-height: 100vh;
