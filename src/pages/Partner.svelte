@@ -2,11 +2,13 @@
   import dayjs from 'dayjs';
   import type { RestAPI } from "src/services/rest/service";
   import type Partner from "src/types/domains/Partner";
-import type PartnerType from 'src/types/domains/PartnerType';
+  import type PartnerType from 'src/types/domains/PartnerType';
 
   import { getContext, onMount } from "svelte";
 
   import Select from "svelte-select";
+
+  export let params = {}
 
   const masterlistService = getContext("masterlistService") as RestAPI;
 
@@ -16,16 +18,6 @@ import type PartnerType from 'src/types/domains/PartnerType';
 
   // external domain props
   let partnerTypes = [] as PartnerType[]
-
-  let items = [
-    { value: "chocolate", label: "Chocolate" },
-    { value: "pizza", label: "Pizza" },
-    { value: "cake", label: "Cake" },
-    { value: "chips", label: "Chips" },
-    { value: "ice-cream", label: "Ice Cream" },
-  ];
-
-  let value = [{ value: "cake", label: "Cake" }];
 
   function handleSelect(event: any) {
     console.log("selected item", event.detail);
@@ -48,6 +40,7 @@ import type PartnerType from 'src/types/domains/PartnerType';
     // fetch item list
     ({ data: activeList } = await masterlistService.call<Partner[]>("partner.list"));
     ({ data: partnerTypes } = await masterlistService.call<Partner[]>("partnerType.list"))
+    console.log({params});
   });
 </script>
 
@@ -70,7 +63,7 @@ import type PartnerType from 'src/types/domains/PartnerType';
         <input type="text" class="form-control" id="inputName" value={activeDetail?.name || ""} required>
       </div>
       <div class="col-md-4">
-        <label for="inputAddress" class="form-label">Address</label>
+        <label for="inputAddress" class="form-label">Address/Country</label>
         <input type="text" class="form-control" id="inputAddress" value={activeDetail?.address || ""}>
       </div>
       <div class="col-md-4">
@@ -86,7 +79,9 @@ import type PartnerType from 'src/types/domains/PartnerType';
           value={
             !activeDetail
               ? []
-              : activeDetail.partnerTypes.map((o) => ({ value: o.id, label: o.name }))
+              : activeDetail
+                  .partnerTypes
+                  .map((o) => ({ value: o.id, label: o.name }))
           }
           on:select={handleSelect}
           isMulti={true}

@@ -12,7 +12,8 @@
   const routes = {
     '/': Home,
     '/part-list': Partlist,
-    '/partner-list': PartnerList,
+    '/partner-list/': PartnerList,
+    '/partner-list/:id': PartnerList,
     '/material-list': MaterialList,
     '/*': Page404
   }

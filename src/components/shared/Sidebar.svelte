@@ -43,8 +43,8 @@
       <a
         id="sidebar-partner-list"
         use:link
-        use:active={{path: '/partner-list*', className: 'active'}}
-        href="/partner-list"  class="nav-link py-3 border-bottom">
+        use:active={{path: '/partner-list/*', className: 'active'}}
+        href="/partner-list/"  class="nav-link py-3 border-bottom">
         <Icon class="h4" name="people" />
       </a>
       <Tooltip target="sidebar-partner-list" placement="right">Partner List</Tooltip>
