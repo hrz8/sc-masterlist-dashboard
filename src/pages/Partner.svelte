@@ -1,46 +1,82 @@
 <script lang="ts">
+  import { getContext, onMount } from "svelte";
+  import { push } from 'svelte-spa-router'
+  import Select from "svelte-select";
   import dayjs from 'dayjs';
   import type { RestAPI } from "src/services/rest/service";
   import type Partner from "src/types/domains/Partner";
   import type PartnerType from 'src/types/domains/PartnerType';
 
-  import { getContext, onMount } from "svelte";
+  export let params = {} as  { id: string };
 
-  import Select from "svelte-select";
+  const masterlistService = getContext('masterlistService') as RestAPI;
 
-  export let params = {}
+  const activeRoute = 'partner-list';
 
-  const masterlistService = getContext("masterlistService") as RestAPI;
+  // app props
+  let loadingList = true;
+  let loadingDetail= false;
 
   // domain props
-  let activeList = [] as Partner[]
-  let activeDetail = null as Partner
+  let activeList = [] as Partner[];
+  let activeDetail = null as Partner;
 
   // external domain props
-  let partnerTypes = [] as PartnerType[]
+  let partnerTypes = [] as PartnerType[];
 
   function handleSelect(event: any) {
     console.log("selected item", event.detail);
   }
 
   function handleFormSubmit() {
-    console.log("uy")
+    console.log("uy");
   }
 
-  async function handleSelectRow(id: string) {
-    const { data } = await masterlistService.call<Partner>("partner.detail", { params: { id } });
-    activeDetail = data
+  async function openDetail(id: string) {
+    loadingDetail = true;
+    try {
+      const { data } = await masterlistService
+        .call<Partner>('partner.detail', {
+          params: { id }
+        });
+      activeDetail = data;
+    } catch (error) {
+      activeDetail = null;
+    } finally {
+      loadingDetail = false;
+    }
+  }
+
+  async function fetchList() {
+    try {
+      const { data } = await masterlistService
+        .call<Partner[]>('partner.list');
+      activeList = data;
+    } catch (error) {
+      activeList = [];
+    } finally {
+      loadingList = false;
+    }
   }
 
   function handleCancelUpdate(): void {
-    activeDetail = null as Partner
+    activeDetail = null as Partner;
   }
 
   onMount(async () => {
-    // fetch item list
-    ({ data: activeList } = await masterlistService.call<Partner[]>("partner.list"));
-    ({ data: partnerTypes } = await masterlistService.call<Partner[]>("partnerType.list"))
-    console.log({params});
+    if (params.id) {
+      await openDetail(params.id);
+    }
+    await fetchList();
+
+    // fetch other items from relationship
+    try {
+      ({ data: partnerTypes } = await masterlistService
+        .call<Partner[]>('partnerType.list'));
+    } catch (error) {
+      partnerTypes = [];
+    }
+
   });
 </script>
 
@@ -57,24 +93,66 @@
     Partner
   </div>
   <div class="card-body">
-    <form on:submit|preventDefault={handleFormSubmit} class="row g-3">
+    {#if loadingDetail}
+      <div
+        class="text-center"
+        style="height: 385px; display: grid; place-items: center;">
+        <div
+          class="spinner-border"
+          role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    {:else}
+    <form
+      on:submit|preventDefault={handleFormSubmit}
+      class="row g-3"
+      style="height: 400px; overflow-y: auto;"
+    >
       <div class="col-md-4">
-        <label for="inputName" class="form-label">Name</label>
-        <input type="text" class="form-control" id="inputName" value={activeDetail?.name || ""} required>
+        <label
+          for="inputName"
+          class="form-label"
+        >Name</label>
+        <input
+          id="inputName"
+          type="text"
+          class="form-control"
+          value={activeDetail?.name || ""}
+          required>
       </div>
       <div class="col-md-4">
-        <label for="inputAddress" class="form-label">Address/Country</label>
-        <input type="text" class="form-control" id="inputAddress" value={activeDetail?.address || ""}>
+        <label
+          for="inputAddress"
+          class="form-label"
+        >Address/Country</label>
+        <input
+          id="inputAddress"
+          type="text"
+          class="form-control"
+          value={activeDetail?.address || ""}>
       </div>
       <div class="col-md-4">
-        <label for="inputContact" class="form-label">Contact</label>
-        <input type="text" class="form-control" id="inputContact" value={activeDetail?.contact || ""} required>
+        <label
+          for="inputContact"
+          class="form-label"
+        >Contact</label>
+        <input
+          id="inputContact"
+          type="text"
+          class="form-control"
+          value={activeDetail?.contact || ""}
+          required>
       </div>
       <div class="col-md-12">
-        <label for="selectType" class="form-label">Type</label>
+        <label
+          for="selectType"
+          class="form-label"
+        >Type</label>
         <Select
           items={
-            partnerTypes.map((o) => ({ value: o.id, label: o.name }))
+            partnerTypes
+              .map((o) => ({ value: o.id, label: o.name }))
           }
           value={
             !activeDetail
@@ -89,16 +167,31 @@
         ></Select>
       </div>
       <div class="col-md-12">
-        <label for="inputDescription" class="form-label">Description</label>
-        <textarea class="form-control" id="inputDescription" rows="3" value={activeDetail?.description || ""}></textarea>
+        <label
+          for="inputDescription"
+          class="form-label"
+        >Description</label>
+        <textarea
+          class="form-control"
+          id="inputDescription"
+          rows="3"
+          value={activeDetail?.description || ""}></textarea>
       </div>
       <div class="col-12">
-        <button class="btn btn-primary" type="submit">{activeDetail ? 'Update' : 'Add'}</button>
+        <button
+          class="btn btn-primary"
+          type="submit"
+        >{activeDetail ? 'Update' : 'Add'}</button>
         {#if activeDetail}
-          <button on:click={handleCancelUpdate} class="btn btn-outline-danger" type="button">Cancel</button>
+          <button
+            on:click={handleCancelUpdate}
+            class="btn btn-outline-danger"
+            type="button"
+          >Cancel</button>
         {/if}
       </div>
     </form>
+    {/if}
   </div>
 </div>
 
@@ -109,6 +202,15 @@
   </div>
   <div class="class-body p-3">
     <div class="table-responsive">
+      {#if loadingList}
+        <div class="text-center">
+          <div
+            class="spinner-border"
+            role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      {:else}
       <table class="table table-hover">
         <caption>List of partners</caption>
         <thead>
@@ -124,18 +226,29 @@
         </thead>
         <tbody>
           {#each activeList as item, i }
-            <tr on:click={async () => {await handleSelectRow(item.id)}} style="cursor: pointer;">
+            <tr
+              on:click={async () => {
+                push(`/${activeRoute}/${item.id}`);
+                await openDetail(item.id)
+              }}
+              style="cursor: pointer;"
+            >
               <th scope="row">{ i + 1 }</th>
               <td class="text-nowrap">{ item.name }</td>
               <td class="text-nowrap">{ item.address }</td>
               <td class="text-nowrap">{ item.contact }</td>
               <td class="text-nowrap">{ item.description }</td>
-              <td class="text-nowrap text-muted">{ dayjs(item.createdAt).format('DD/MM/YYYY HH:mm:ss') }</td>
-              <td class="text-nowrap text-muted">{ dayjs(item.updatedAt).format('DD/MM/YYYY HH:mm:ss') }</td>
+              <td class="text-nowrap text-muted">
+                { dayjs(item.createdAt).format('DD/MM/YYYY HH:mm:ss') }
+              </td>
+              <td class="text-nowrap text-muted">
+                { dayjs(item.updatedAt).format('DD/MM/YYYY HH:mm:ss') }
+              </td>
             </tr>
           {/each}
         </tbody>
       </table>
+      {/if}
     </div>
   </div>
 </div>

@@ -35,6 +35,14 @@ export class RestAPI {
     return `${urlPath}?${qs.stringify(payloadQueryParams, { encodeValuesOnly: true })}`
   }
 
+  private async fetcher<T>(input: RequestInfo, options?: RequestInit): Promise<T> {
+    const response = await fetch(input, options);
+    if (!response.ok) {
+      throw response;
+    }
+    return response.json() as Promise<T>;
+  }
+
   public async call<T>(
     endpointPath: string,
     payload?: EndpointPayload
@@ -65,7 +73,10 @@ export class RestAPI {
       requestOptions.body = JSON.stringify(payload.data)
     }
 
-    const response = await fetch(`${this._baseUrl}${endpointmap.url}`, requestOptions).then((res) => res.json())
-    return response as EndpointResponse<T>
+    const response = await this.fetcher<EndpointResponse<T>>(
+      `${this._baseUrl}${endpointmap.url}`,
+      requestOptions
+    )
+    return response
   }
 }
