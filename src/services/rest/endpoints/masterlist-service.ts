@@ -22,6 +22,10 @@ export const endpoints: EndpointMap = {
     list: {
       method: HTTPMethod.GET,
       url: '/v1/partner-type'
+    },
+    detail: {
+      method: HTTPMethod.GET,
+      url: '/v1/partner-type/:id'
     }
   }
 }

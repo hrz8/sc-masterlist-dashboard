@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { Icon, Tooltip } from 'sveltestrap'
-  import { link } from 'svelte-spa-router'
-  import active from 'svelte-spa-router/active'
+  import { Icon, Tooltip } from 'sveltestrap';
+  import { link } from 'svelte-spa-router';
+  import active from 'svelte-spa-router/active';
 </script>
 
 <div

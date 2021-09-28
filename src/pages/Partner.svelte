@@ -1,10 +1,13 @@
 <script lang="ts">
-  import { getContext, onMount } from "svelte";
+  import { getContext, onMount } from 'svelte';
+  import { Icon } from 'sveltestrap';
   import { push } from 'svelte-spa-router';
   import Select from 'svelte-select';
   import dayjs from 'dayjs';
-  import type { RestAPI } from "src/services/rest/service";
-  import type Partner from "src/types/domains/Partner";
+  import Loading from '../components/shared/Loading.svelte';
+  import PartnerTypeCrud from '../components/PartnerTypeCrud.svelte';
+  import type { RestAPI } from 'src/services/rest/service';
+  import type Partner from 'src/types/domains/Partner';
   import type PartnerType from 'src/types/domains/PartnerType';
 
   export let params = {} as  { id: string };
@@ -16,8 +19,8 @@
   const activeRoute = 'partner-list';
 
   // app props
-  let loadingList = true;
-  let loadingDetail= false;
+  let loadingActiveList = true;
+  let loadingActiveDetail = false;
 
   // domain props
   let activeList = [] as Partner[];
@@ -34,8 +37,9 @@
     console.log("uy");
   }
 
+  // method -> services related
   async function openDetail(id: string) {
-    loadingDetail = true;
+    loadingActiveDetail = true;
     try {
       const { data } = await masterlistService
         .call<Partner>('partner.detail', {
@@ -46,7 +50,7 @@
     } catch (error) {
       activeDetail = null;
       toastError(`
-        error while fetch partner detail<br>
+        error while fetch partner detail!<br>
         reason: ${error.message}${
           error.errorCode
           ? `<br>code: [${error.errorCode}]` 
@@ -54,7 +58,7 @@
         }
       `);
     } finally {
-      loadingDetail = false;
+      loadingActiveDetail = false;
     }
   }
 
@@ -66,8 +70,35 @@
       toastSuccess('successfully fetch partner list!');
     } catch (error) {
       activeList = [];
+      toastError(`
+        error while fetch partner list!<br>
+        reason: ${error.message}${
+          error.errorCode
+          ? `<br>code: [${error.errorCode}]` 
+          : ''
+        }
+      `);
     } finally {
-      loadingList = false;
+      loadingActiveList = false;
+    }
+  }
+
+  async function fetchPartnerTypes() {
+    try {
+      const { data }= await masterlistService
+        .call<PartnerType[]>('partnerType.list');
+      partnerTypes = data;
+      toastSuccess('successfully fetch partner type list!');
+    } catch (error) {
+      partnerTypes = [];
+      toastError(`
+        error while fetch partner type list!<br>
+        reason: ${error.message}${
+          error.errorCode
+          ? `<br>code: [${error.errorCode}]` 
+          : ''
+        }
+      `);
     }
   }
 
@@ -77,14 +108,8 @@
     }
     await fetchList();
     // fetch other items from relationship
-    try {
-      ({ data: partnerTypes } = await masterlistService
-        .call<Partner[]>('partnerType.list'));
-    } catch (error) {
-      partnerTypes = [];
-    }
-
-  });
+    await fetchPartnerTypes();
+});
 </script>
 
 <div id="toast" aria-live="polite" aria-atomic="true" class="position-relative"></div>
@@ -102,15 +127,11 @@
     Partner
   </div>
   <div class="card-body">
-    {#if loadingDetail}
+    {#if loadingActiveDetail}
       <div
         class="text-center"
-        style="height: 385px; display: grid; place-items: center;">
-        <div
-          class="spinner-border"
-          role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
+        style="height: 385px; display: grid; place-items: center;"
+      ><Loading />
       </div>
     {:else}
     <form
@@ -152,7 +173,7 @@
           value={activeDetail?.contact || ""}
           required>
       </div>
-      <div class="col-md-12">
+      <div class="col-md-11">
         <label
           for="selectType"
           class="form-label"
@@ -173,6 +194,13 @@
           isMulti={true}
           isClearable={false}
         ></Select>
+      </div>
+      <div class="col-md-1" style="align-self: end; padding-bottom: 16px;">
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-primary"
+          data-bs-toggle="modal" data-bs-target="#partnerTypeModal"
+        ><Icon name="box-arrow-up-left" /></button>
       </div>
       <div class="col-md-12">
         <label
@@ -208,15 +236,11 @@
   <div class="card-header">
     <span class="badge bg-primary">List</span> Partner
   </div>
-  <div class="class-body p-3">
+  <div class="card-body p-3">
     <div class="table-responsive">
-      {#if loadingList}
+      {#if loadingActiveList}
         <div class="text-center">
-          <div
-            class="spinner-border"
-            role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div>
+          <Loading />
         </div>
       {:else}
       <table class="table table-hover">
@@ -256,6 +280,31 @@
         </tbody>
       </table>
       {/if}
+    </div>
+  </div>
+</div>
+
+<!-- PARTNER TYPE MODAL -->
+<div
+  id="partnerTypeModal" 
+  class="modal fade"
+  tabindex="-1"
+  aria-labelledby="partnerTypeModalLabel"
+  aria-hidden="true"
+  data-bs-backdrop="static"
+  data-bs-keyboard="false">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="partnerTypeModalLabel">Part Type List</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <PartnerTypeCrud />
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
     </div>
   </div>
 </div>
