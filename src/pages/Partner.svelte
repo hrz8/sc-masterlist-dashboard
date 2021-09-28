@@ -222,7 +222,7 @@
                 id="partnerMaterial"
                 class="btn btn-outline-success"
                 type="button"
-              >{ activeDetail.name }'s Material List</button>
+              >Material List of { activeDetail.name }</button>
               <Popover
                 target="partnerMaterial"
                 trigger="focus"
