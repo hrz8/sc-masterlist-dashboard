@@ -70,6 +70,11 @@
   dependencies:
     "@types/node" "*"
 
+"@zerodevx/svelte-toast@^0.6.1":
+  version "0.6.1"
+  resolved "https://registry.yarnpkg.com/@zerodevx/svelte-toast/-/svelte-toast-0.6.1.tgz#5dbabcd272743a4e5becdd35ba4235bde060708b"
+  integrity sha512-zQiAWXX1586NY4YrYUi1kRmBdQ8Sk4HLxv7XGGjbVU57sq5j1uJ9U0D23kd1DTGb/NfO60qgIRQjt1ZWAk9IQg==
+
 ansi-styles@^4.1.0:
   version "4.3.0"
   resolved "https://registry.yarnpkg.com/ansi-styles/-/ansi-styles-4.3.0.tgz#edd803628ae71c04c85ae7a0906edad34b648937"

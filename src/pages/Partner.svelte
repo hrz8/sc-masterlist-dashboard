@@ -1,7 +1,7 @@
 <script lang="ts">
   import { getContext, onMount } from "svelte";
-  import { push } from 'svelte-spa-router'
-  import Select from "svelte-select";
+  import { push } from 'svelte-spa-router';
+  import Select from 'svelte-select';
   import dayjs from 'dayjs';
   import type { RestAPI } from "src/services/rest/service";
   import type Partner from "src/types/domains/Partner";
@@ -10,6 +10,8 @@
   export let params = {} as  { id: string };
 
   const masterlistService = getContext('masterlistService') as RestAPI;
+  const toastSuccess = getContext('toastSuccess') as (message: string) => void;
+  const toastError = getContext('toastError') as (message: string) => void;
 
   const activeRoute = 'partner-list';
 
@@ -40,8 +42,17 @@
           params: { id }
         });
       activeDetail = data;
+      toastSuccess('successfully fetch partner detail!');
     } catch (error) {
       activeDetail = null;
+      toastError(`
+        error while fetch partner detail<br>
+        reason: ${error.message}${
+          error.errorCode
+          ? `<br>code: [${error.errorCode}]` 
+          : ''
+        }
+      `);
     } finally {
       loadingDetail = false;
     }
@@ -52,6 +63,7 @@
       const { data } = await masterlistService
         .call<Partner[]>('partner.list');
       activeList = data;
+      toastSuccess('successfully fetch partner list!');
     } catch (error) {
       activeList = [];
     } finally {
@@ -59,16 +71,11 @@
     }
   }
 
-  function handleCancelUpdate(): void {
-    activeDetail = null as Partner;
-  }
-
   onMount(async () => {
     if (params.id) {
       await openDetail(params.id);
     }
     await fetchList();
-
     // fetch other items from relationship
     try {
       ({ data: partnerTypes } = await masterlistService
@@ -79,6 +86,8 @@
 
   });
 </script>
+
+<div id="toast" aria-live="polite" aria-atomic="true" class="position-relative"></div>
 
 <h1>Partner</h1>
 
@@ -107,8 +116,7 @@
     <form
       on:submit|preventDefault={handleFormSubmit}
       class="row g-3"
-      style="height: 400px; overflow-y: auto;"
-    >
+      style="height: 400px; overflow-y: auto;">
       <div class="col-md-4">
         <label
           for="inputName"
@@ -184,7 +192,7 @@
         >{activeDetail ? 'Update' : 'Add'}</button>
         {#if activeDetail}
           <button
-            on:click={handleCancelUpdate}
+            on:click={() => {activeDetail = null}}
             class="btn btn-outline-danger"
             type="button"
           >Cancel</button>
@@ -231,8 +239,7 @@
                 push(`/${activeRoute}/${item.id}`);
                 await openDetail(item.id)
               }}
-              style="cursor: pointer;"
-            >
+              style="cursor: pointer;">
               <th scope="row">{ i + 1 }</th>
               <td class="text-nowrap">{ item.name }</td>
               <td class="text-nowrap">{ item.address }</td>
@@ -252,5 +259,3 @@
     </div>
   </div>
 </div>
-
-

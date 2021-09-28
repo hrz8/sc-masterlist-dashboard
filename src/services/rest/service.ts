@@ -4,16 +4,16 @@ import type { HTTPMethod } from "./methods";
 
 export type EndpointMap = Record<string, Record<string, { method: HTTPMethod, url: string }>>
 export type EndpointPayload = {
-  params?: Record<string, any>,
-  query?: Record<string, any>,
-  data?: Record<string, any>
+  params?: Record<string, any>;
+  query?: Record<string, any>;
+  data?: Record<string, any>;
 }
 export type EndpointResponse<T> = {
-  data: T,
-  message: string,
-  meta: Record<string, any>,
-  status: number,
-  errorCode?: string
+  data: T;
+  message: string;
+  meta: Record<string, any>;
+  status: number;
+  errorCode?: string;
 }
 
 export class RestAPI {
@@ -38,7 +38,7 @@ export class RestAPI {
   private async fetcher<T>(input: RequestInfo, options?: RequestInit): Promise<T> {
     const response = await fetch(input, options);
     if (!response.ok) {
-      throw response;
+      throw await response.json();
     }
     return response.json() as Promise<T>;
   }
