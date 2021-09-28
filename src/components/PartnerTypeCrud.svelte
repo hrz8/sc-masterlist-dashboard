@@ -158,6 +158,8 @@
             <tr>
               <th scope="col">Name</th>
               <th scope="col">Description</th>
+              <th scope="col">Created</th>
+              <th scope="col">Last Modified</th>
               <th scope="col">#</th>
             </tr>
           </thead>
@@ -166,9 +168,11 @@
             <tr
               on:click={async () => await openDetail(type.id)}
               style="cursor: pointer;">
-              <td>{ type.name }</td>
-              <td>{ type.description }</td>
-              <td>
+              <td class="text-nowrap">{ type.name }</td>
+              <td class="text-nowrap">{ type.description }</td>
+              <td class="text-nowrap text-muted">{ type.createdAt }</td>
+              <td class="text-nowrap text-muted">{ type.updatedAt }</td>
+              <td class="text-nowrap">
                 <button type="button" class="btn btn-danger btn-sm">
                   <Icon name="trash-fill" />
                 </button>
