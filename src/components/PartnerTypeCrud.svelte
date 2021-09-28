@@ -92,14 +92,14 @@
     {#if loadingActiveDetail}
       <div
         class="text-center"
-        style="height: 385px; display: grid; place-items: center;"
+        style="height: 300px; display: grid; place-items: center;"
       ><Loading />
       </div>
     {:else}
       <form
         on:submit|preventDefault={handleFormSubmit}
         class="row g-3"
-        style="height: 300px; overflow-y: auto;">
+        style="height: 315px; overflow-y: auto;">
         <div class="col-md-12">
           <label
             for="inputName"
