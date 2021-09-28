@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getContext, onMount } from 'svelte';
-  import { Icon } from 'sveltestrap';
+  import { Icon, Popover } from 'sveltestrap';
   import { push } from 'svelte-spa-router';
   import Select from 'svelte-select';
   import dayjs from 'dayjs';
@@ -195,7 +195,9 @@
           isClearable={false}
         ></Select>
       </div>
-      <div class="col-md-1" style="align-self: end; padding-bottom: 16px;">
+      <div
+        class="col-md-1"
+        style="align-self: end; padding-bottom: 16px;">
         <button
           type="button"
           class="btn btn-sm btn-outline-primary"
@@ -213,7 +215,45 @@
           rows="3"
           value={activeDetail?.description || ""}></textarea>
       </div>
-      <div class="col-12">
+        {#if activeDetail}
+          <div class="col-md-12">
+            <div class="d-grid gap-2 col-6 mx-auto">
+              <button
+                id="partnerMaterial"
+                class="btn btn-outline-success"
+                type="button"
+              >{ activeDetail.name }'s Material List</button>
+              <Popover
+                target="partnerMaterial"
+                trigger="focus"
+                placement="top"
+                title={`Material List of ${activeDetail.name}`}
+              >
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                      <thead>
+                        <tr>
+                          <th scope="col">#</th>
+                          <th scope="col">TSM</th>
+                          <th scope="col">Material Grade</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {#each activeDetail.materials || [] as material, i}
+                          <tr style="cursor: pointer;">
+                            <th scope="row">{ i + 1 }</th>
+                            <td class="text-nowrap">{ material.tsm }</td>
+                            <td class="text-nowrap">{ material.materialGrade.code }</td>
+                          </tr>
+                        {/each}
+                      </tbody>
+                    </table>
+                </div>
+              </Popover>
+            </div>
+          </div>
+        {/if}
+        <div class="col-12">
         <button
           class="btn btn-primary"
           type="submit"
