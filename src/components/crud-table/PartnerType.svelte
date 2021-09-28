@@ -1,7 +1,7 @@
 <script lang="ts">
   import { getContext, onMount } from 'svelte';
   import { Icon } from 'sveltestrap';
-  import Loading from '../components/shared/Loading.svelte';
+  import Loading from '../shared/Loading.svelte';
   import type { RestAPI } from 'src/services/rest/service';
   import type PartnerType from 'src/types/domains/PartnerType';
 

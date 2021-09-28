@@ -5,7 +5,7 @@
   import Select from 'svelte-select';
   import dayjs from 'dayjs';
   import Loading from '../components/shared/Loading.svelte';
-  import PartnerTypeCrud from '../components/PartnerTypeCrud.svelte';
+  import PartnerTypeCrud from '../components/crud-table/PartnerType.svelte';
   import type { RestAPI } from 'src/services/rest/service';
   import type Partner from 'src/types/domains/Partner';
   import type PartnerType from 'src/types/domains/PartnerType';
