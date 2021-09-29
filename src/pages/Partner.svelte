@@ -27,6 +27,8 @@
   let activeDetail = null as Partner;
   let payloadList = {} as EndpointPayload;
   let searchBy = "";
+  let searchPartnerTypes = [] as string[];
+  let searchFormValue = "";
 
   // external domain props
   let partnerTypes = [] as PartnerType[];
@@ -40,9 +42,28 @@
     console.log("uy");
   }
 
-  function handleSearchBy(e) {
+  function handleSearchBySelect(e: any) {
     searchBy = e.currentTarget.value;
-    console.log(searchBy);
+  }
+
+  function handleSearchPartnerTypeSelect(e: any) {
+    searchPartnerTypes = e.detail.map((v) => v.value);
+  }
+
+  function handleSearchClick() {
+    if (searchBy !== "" && searchFormValue !== "") {
+      payloadList = {
+        query: {
+          [searchBy]: {
+            like: searchFormValue,
+          }
+        }
+      }
+    };
+    if (searchPartnerTypes.length) {
+      payloadList.query['partnerTypes'] = { in: searchPartnerTypes };
+    }
+    console.log(payloadList);
   }
 
   // method -> services related
@@ -290,10 +311,10 @@
         <input
           type="text"
           class="form-control"
-          id="exampleFormControlInput1"
+          bind:value={searchFormValue}
           placeholder="Search">
       </div>
-      <div class="col-md-6">
+      <div class="col-md-9">
         <input
           type="radio"
           class="btn-check"
@@ -301,7 +322,7 @@
           id="searchByName"
           autocomplete="off"
           checked={searchBy==='name'}
-          on:change={handleSearchBy}
+          on:change={handleSearchBySelect}
           value="name">
         <label
           class="btn btn-outline-success"
@@ -314,7 +335,7 @@
           id="searchByAddress"
           autocomplete="off"
           checked={searchBy==='address'}
-          on:change={handleSearchBy}
+          on:change={handleSearchBySelect}
           value="address">
         <label
           class="btn btn-outline-success"
@@ -327,15 +348,35 @@
           id="searchByContact"
           autocomplete="off"
           checked={searchBy==='contact'}
-          on:change={handleSearchBy}
+          on:change={handleSearchBySelect}
           value="contact">
         <label
           class="btn btn-outline-success"
           for="searchByContact"
         >Contact</label>
       </div>
-      <div class="col-md-12 mt-2">
-        <button class="btn btn-primary" type="button">Search</button>
+      <div class="col-md-6 mt-3">
+        <label
+          for="selectSearchType"
+          class="form-label"
+        >Type</label>
+        <Select
+          items={
+            partnerTypes
+              .map((o) => ({ value: o.id, label: o.name }))
+          }
+          value={[]}
+          on:select={handleSearchPartnerTypeSelect}
+          isMulti={true}
+          isClearable={false}
+        ></Select>
+      </div>
+      <div class="col-md-12 mt-2 mb-5">
+        <button
+          on:click={handleSearchClick}
+          class="btn btn-primary"
+          type="button"
+        >Search</button>
       </div>
     </div>
     <div class="table-responsive">
