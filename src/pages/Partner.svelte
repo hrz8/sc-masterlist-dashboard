@@ -6,7 +6,7 @@
   import dayjs from 'dayjs';
   import Loading from '../components/shared/Loading.svelte';
   import PartnerTypeCrud from '../components/crud-table/PartnerType.svelte';
-  import type { RestAPI } from 'src/services/rest/service';
+  import type { EndpointPayload, RestAPI } from 'src/services/rest/service';
   import type Partner from 'src/types/domains/Partner';
   import type PartnerType from 'src/types/domains/PartnerType';
 
@@ -25,16 +25,24 @@
   // domain props
   let activeList = [] as Partner[];
   let activeDetail = null as Partner;
+  let payloadList = {} as EndpointPayload;
+  let searchBy = "";
 
   // external domain props
   let partnerTypes = [] as PartnerType[];
 
+  // events
   function handleSelect(event: any) {
     console.log("selected item", event.detail);
   }
 
   function handleFormSubmit() {
     console.log("uy");
+  }
+
+  function handleSearchBy(e) {
+    searchBy = e.currentTarget.value;
+    console.log(searchBy);
   }
 
   // method -> services related
@@ -86,7 +94,7 @@
   async function fetchPartnerTypes() {
     try {
       const { data }= await masterlistService
-        .call<PartnerType[]>('partnerType.list');
+        .call<PartnerType[]>('partnerType.list', );
       partnerTypes = data;
       toastSuccess('successfully fetch partner type list!');
     } catch (error) {
@@ -277,6 +285,59 @@
     <span class="badge bg-primary">List</span> Partner
   </div>
   <div class="card-body p-3">
+    <div class="row">
+      <div class="col-md-3">
+        <input
+          type="text"
+          class="form-control"
+          id="exampleFormControlInput1"
+          placeholder="Search">
+      </div>
+      <div class="col-md-6">
+        <input
+          type="radio"
+          class="btn-check"
+          name="options-outlined"
+          id="searchByName"
+          autocomplete="off"
+          checked={searchBy==='name'}
+          on:change={handleSearchBy}
+          value="name">
+        <label
+          class="btn btn-outline-success"
+          for="searchByName"
+        >Name</label>
+        <input
+          type="radio"
+          class="btn-check"
+          name="options-outlined"
+          id="searchByAddress"
+          autocomplete="off"
+          checked={searchBy==='address'}
+          on:change={handleSearchBy}
+          value="address">
+        <label
+          class="btn btn-outline-success"
+          for="searchByAddress"
+        >Address/Country</label>
+        <input
+          type="radio"
+          class="btn-check"
+          name="options-outlined"
+          id="searchByContact"
+          autocomplete="off"
+          checked={searchBy==='contact'}
+          on:change={handleSearchBy}
+          value="contact">
+        <label
+          class="btn btn-outline-success"
+          for="searchByContact"
+        >Contact</label>
+      </div>
+      <div class="col-md-12 mt-2">
+        <button class="btn btn-primary" type="button">Search</button>
+      </div>
+    </div>
     <div class="table-responsive">
       {#if loadingActiveList}
         <div class="text-center">
