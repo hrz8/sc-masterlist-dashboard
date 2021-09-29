@@ -50,7 +50,7 @@
     searchPartnerTypes = e.detail.map((v) => v.value);
   }
 
-  function handleSearchClick() {
+  async function handleSearchClick() {
     if (searchBy !== "" && searchFormValue !== "") {
       payloadList = {
         query: {
@@ -63,7 +63,7 @@
     if (searchPartnerTypes.length) {
       payloadList.query['partnerTypes'] = { in: searchPartnerTypes };
     }
-    console.log(payloadList);
+    await fetchList(payloadList);
   }
 
   // method -> services related
@@ -91,10 +91,10 @@
     }
   }
 
-  async function fetchList() {
+  async function fetchList(payload: EndpointPayload = null) {
     try {
       const { data } = await masterlistService
-        .call<Partner[]>('partner.list');
+        .call<Partner[]>('partner.list', payload);
       activeList = data;
       toastSuccess('successfully fetch partner list!');
     } catch (error) {
@@ -373,7 +373,7 @@
       </div>
       <div class="col-md-12 mt-2 mb-5">
         <button
-          on:click={handleSearchClick}
+          on:click={async () => {await handleSearchClick()}}
           class="btn btn-primary"
           type="button"
         >Search</button>
