@@ -46,11 +46,18 @@
     searchBy = e.currentTarget.value;
   }
 
+  function handleSearchByUnselect(e: any) {
+    if (searchBy === e.currentTarget.value) {
+      searchBy = "";
+    }
+  }
+
   function handleSearchPartnerTypeSelect(e: any) {
     searchPartnerTypes = e.detail.map((v) => v.value);
   }
 
   async function handleSearchClick() {
+    payloadList = {}
     if (searchBy !== "" && searchFormValue !== "") {
       payloadList = {
         query: {
@@ -323,6 +330,7 @@
           autocomplete="off"
           checked={searchBy==='name'}
           on:change={handleSearchBySelect}
+          on:click={handleSearchByUnselect}
           value="name">
         <label
           class="btn btn-outline-success"
@@ -336,6 +344,7 @@
           autocomplete="off"
           checked={searchBy==='address'}
           on:change={handleSearchBySelect}
+          on:click={handleSearchByUnselect}
           value="address">
         <label
           class="btn btn-outline-success"
@@ -349,6 +358,7 @@
           autocomplete="off"
           checked={searchBy==='contact'}
           on:change={handleSearchBySelect}
+          on:click={handleSearchByUnselect}
           value="contact">
         <label
           class="btn btn-outline-success"
