@@ -1,4 +1,4 @@
 export default interface CommonDomain {
-  createdAt: string
-  updatedAt: string
+  createdAt?: string
+  updatedAt?: string
 }

@@ -10,6 +10,10 @@
   const masterlistService = getContext('masterlistService') as RestAPI;
   const toastSuccess = getContext('toastSuccess') as (message: string) => void;
   const toastError = getContext('toastError') as (message: string) => void;
+  enum SUBMIT_TYPE {
+    CREATE = "Create",
+    UPDATE = "update"
+  }
 
   // app props
   let loadingActiveList = true;
@@ -17,12 +21,23 @@
 
   // domain props
   let activeList = [] as PartnerType[];
-  let activeDetail = null as PartnerType;
+  let activeDetailFetched = false;
+  let activeDetail: PartnerType = {
+    id: "",
+    name: "",
+    description: ""
+  };
 
-  function handleFormSubmit() {
-    console.log("SUBMIT PARTNERTYPE");
+  async function handleFormSubmit(type: SUBMIT_TYPE) {
+    if (type === SUBMIT_TYPE.CREATE) {
+      await createNewRow();
+      await fetchList();
+    } else if (type === SUBMIT_TYPE.UPDATE) {
+
+    }
   }
 
+  // method -> services related
   async function openDetail(id: string) {
     loadingActiveDetail = true;
     try {
@@ -31,9 +46,9 @@
           params: { id }
         });
       activeDetail = data;
+      activeDetailFetched = true;
       toastSuccess('successfully fetch partner type detail!');
     } catch (error) {
-      activeDetail = null;
       toastError(`
         error while fetch partner detail!<br>
         reason: ${error.message}${
@@ -42,16 +57,16 @@
           : ''
         }
       `);
+      activeDetailFetched = false;
     } finally {
       loadingActiveDetail = false;
     }
   }
 
-  // method -> services related
   async function fetchList() {
     try {
       loadingActiveList = true;
-      const { data }= await masterlistService
+      const { data } = await masterlistService
         .call<PartnerType[]>('partnerType.list');
       activeList = data;
       toastSuccess('successfully fetch partner type list!');
@@ -70,6 +85,29 @@
     }
   }
 
+  async function createNewRow() {
+    try {
+      loadingActiveDetail = true;
+      const { data } = await masterlistService
+        .call<PartnerType>('partnerType.create', {
+          data: activeDetail
+        });
+      activeDetail = data;
+      toastSuccess('successfully create partner type!');
+    } catch (error) {
+      toastError(`
+        error while creating partner type!<br>
+        reason: ${error.message}${
+          error.errorCode
+          ? `<br>code: [${error.errorCode}]` 
+          : ''
+        }
+      `);
+    } finally {
+      loadingActiveDetail = false;
+    }
+  }
+
   onMount(async () => {
     if (params.id) {
       await openDetail(params.id);
@@ -81,7 +119,7 @@
 <!-- FORM -->
 <div class="card mb-3">
   <div class="card-header">
-    {#if activeDetail}
+    {#if activeDetailFetched}
       <span class="badge bg-warning">Update</span>
     {:else}
       <span class="badge bg-success">New</span>
@@ -97,7 +135,9 @@
       </div>
     {:else}
       <form
-        on:submit|preventDefault={handleFormSubmit}
+        on:submit|preventDefault={async () => {
+          await handleFormSubmit(activeDetailFetched ? SUBMIT_TYPE.UPDATE : SUBMIT_TYPE.CREATE)
+        }}
         class="row g-3"
         style="height: 315px; overflow-y: auto;">
         <div class="col-md-12">
@@ -109,7 +149,7 @@
             id="inputName"
             type="text"
             class="form-control"
-            value={activeDetail?.name || ""}
+            bind:value={activeDetail.name}
             required>
         </div>
         <div class="col-md-12">
@@ -121,16 +161,23 @@
             class="form-control"
             id="inputDescription"
             rows="3"
-            value={activeDetail?.description || ""}></textarea>
+            bind:value={activeDetail.description}></textarea>
         </div>
         <div class="col-12">
           <button
             class="btn btn-primary"
             type="submit"
-          >{activeDetail ? 'Update' : 'Add'}</button>
-          {#if activeDetail}
+          >{activeDetailFetched ? SUBMIT_TYPE.UPDATE : SUBMIT_TYPE.CREATE }</button>
+          {#if activeDetailFetched}
             <button
-              on:click={() => {activeDetail = null}}
+              on:click={() => {
+                activeDetail = {
+                  id: "",
+                  name: "",
+                  description: ""
+                };
+                activeDetailFetched = false;
+              }}
               class="btn btn-outline-danger"
               type="button"
             >Cancel</button>
@@ -164,7 +211,7 @@
             </tr>
           </thead>
           <tbody>
-            {#each activeList as type, i}
+            {#each activeList as type}
             <tr
               on:click={async () => await openDetail(type.id)}
               style="cursor: pointer;">

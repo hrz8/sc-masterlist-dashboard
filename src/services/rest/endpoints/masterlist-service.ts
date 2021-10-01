@@ -26,6 +26,10 @@ export const endpoints: EndpointMap = {
     detail: {
       method: HTTPMethod.GET,
       url: '/v1/partner-type/:id'
+    },
+    create: {
+      method: HTTPMethod.POST,
+      url: '/v1/partner-type'
     }
   }
 }
