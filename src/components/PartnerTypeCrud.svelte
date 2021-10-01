@@ -12,7 +12,7 @@
   const toastError = getContext('toastError') as (message: string) => void;
   enum SUBMIT_TYPE {
     CREATE = "Create",
-    UPDATE = "update"
+    UPDATE = "Update"
   }
 
   // app props
@@ -22,19 +22,20 @@
   // domain props
   let activeList = [] as PartnerType[];
   let activeDetailFetched = false;
-  let activeDetail: PartnerType = {
+  let activeDetailDefault: PartnerType = {
     id: "",
     name: "",
     description: ""
   };
+  let activeDetail: PartnerType = activeDetailDefault;
 
   async function handleFormSubmit(type: SUBMIT_TYPE) {
     if (type === SUBMIT_TYPE.CREATE) {
       await createNewRow();
-      await fetchList();
     } else if (type === SUBMIT_TYPE.UPDATE) {
-
+      await updateRow();
     }
+    await fetchList();
   }
 
   // method -> services related
@@ -97,6 +98,29 @@
     } catch (error) {
       toastError(`
         error while creating partner type!<br>
+        reason: ${error.message}${
+          error.errorCode
+          ? `<br>code: [${error.errorCode}]` 
+          : ''
+        }
+      `);
+    } finally {
+      loadingActiveDetail = false;
+    }
+  }
+
+  async function updateRow() {
+    try {
+      loadingActiveDetail = true;
+      await masterlistService
+        .call<PartnerType>('partnerType.update', {
+          params: { id: activeDetail.id },
+          data: activeDetail
+        });
+      toastSuccess('successfully update partner type!');
+    } catch (error) {
+      toastError(`
+        error while updating partner type!<br>
         reason: ${error.message}${
           error.errorCode
           ? `<br>code: [${error.errorCode}]` 
@@ -171,11 +195,7 @@
           {#if activeDetailFetched}
             <button
               on:click={() => {
-                activeDetail = {
-                  id: "",
-                  name: "",
-                  description: ""
-                };
+                activeDetail = activeDetailDefault;
                 activeDetailFetched = false;
               }}
               class="btn btn-outline-danger"
@@ -214,7 +234,10 @@
             {#each activeList as type}
             <tr
               on:click={async () => await openDetail(type.id)}
-              style="cursor: pointer;">
+              style={`
+                cursor: pointer;
+                ${activeDetail.id === type.id && 'background-color: #00000013'}
+              `}>
               <td class="text-nowrap">{ type.name }</td>
               <td class="text-nowrap">{ type.description }</td>
               <td class="text-nowrap text-muted">{ type.createdAt }</td>
