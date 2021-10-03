@@ -10,6 +10,7 @@
   const masterlistService = getContext('masterlistService') as RestAPI;
   const toastSuccess = getContext('toastSuccess') as (message: string) => void;
   const toastError = getContext('toastError') as (message: string) => void;
+  const toastErrorWrapper = getContext('toastErrorWrapper') as (error, message: string) => void;
   enum SUBMIT_TYPE {
     CREATE = "Create",
     UPDATE = "Update"
@@ -36,7 +37,6 @@
   async function handleFormSubmit(type: SUBMIT_TYPE) {
     if (type === SUBMIT_TYPE.CREATE) {
       await createNewRow();
-      activeDetail = getActiveDetailDefault();
     } else if (type === SUBMIT_TYPE.UPDATE) {
       await updateRow();
     }
@@ -106,16 +106,10 @@
           data: activeDetail
         });
       activeDetail = data;
+      activeDetail = getActiveDetailDefault();
       toastSuccess('successfully create partner type!');
     } catch (error) {
-      toastError(`
-        error while creating partner type!<br>
-        reason: ${error.message}${
-          error.errorCode
-          ? `<br>code: [${error.errorCode}]` 
-          : ''
-        }
-      `);
+      toastErrorWrapper(error, 'error while creating partner type!');
     } finally {
       loadingActiveDetail = false;
     }
