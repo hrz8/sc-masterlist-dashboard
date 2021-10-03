@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getContext, onMount } from 'svelte';
-  import { Icon } from 'sveltestrap';
+  import { Icon, Tooltip } from 'sveltestrap';
   import Loading from '../components/shared/Loading.svelte';
   import type { RestAPI } from 'src/services/rest/service';
   import type PartnerType from 'src/types/domains/PartnerType';
@@ -22,16 +22,21 @@
   // domain props
   let activeList = [] as PartnerType[];
   let activeDetailFetched = false;
-  let activeDetailDefault: PartnerType = {
-    id: "",
-    name: "",
-    description: ""
-  };
-  let activeDetail: PartnerType = activeDetailDefault;
+  let activeDetail: PartnerType = getActiveDetailDefault();
+
+  function getActiveDetailDefault(): PartnerType {
+    let activeDetailDefault: PartnerType = {
+      id: "",
+      name: "",
+      description: ""
+    };
+    return activeDetailDefault;
+  }
 
   async function handleFormSubmit(type: SUBMIT_TYPE) {
     if (type === SUBMIT_TYPE.CREATE) {
       await createNewRow();
+      activeDetail = getActiveDetailDefault();
     } else if (type === SUBMIT_TYPE.UPDATE) {
       await updateRow();
     }
@@ -71,7 +76,8 @@
         .call<PartnerType[]>('partnerType.list', {
           query: {
             sort: {
-              by: "upddatedAt"
+              by: "updatedAt",
+              mode: "desc"
             }
           }
         });
@@ -148,7 +154,7 @@
             params: { id }
           });
         activeDetailFetched = false;
-        activeDetail = activeDetailDefault;
+        activeDetail = getActiveDetailDefault();
         toastSuccess('successfully delete partner type!');
       } catch (error) {
         toastError(`
@@ -228,7 +234,7 @@
           {#if activeDetailFetched}
             <button
               on:click={() => {
-                activeDetail = activeDetailDefault;
+                activeDetail = getActiveDetailDefault();
                 activeDetailFetched = false;
               }}
               class="btn btn-outline-danger"
@@ -247,11 +253,13 @@
     <span class="badge bg-primary">List</span> Partner Type
     <div class="float-end">
       <button
+        id="refresh-partnerType"
         type="button"
         class="btn btn-success btn-sm"
         on:click={async () => await fetchList()}
       ><Icon name="arrow-clockwise" />
       </button>
+      <Tooltip target="refresh-partnerType" placement="left">Refresh the list</Tooltip>
     </div>
   </div>
   <div class="card-body p-3">
