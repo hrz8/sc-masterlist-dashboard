@@ -245,6 +245,14 @@
 <div class="card mb-3">
   <div class="card-header">
     <span class="badge bg-primary">List</span> Partner Type
+    <div class="float-end">
+      <button
+        type="button"
+        class="btn btn-success btn-sm"
+        on:click={async () => await fetchList()}
+      ><Icon name="arrow-clockwise" />
+      </button>
+    </div>
   </div>
   <div class="card-body p-3">
     <div class="table-responsive">
