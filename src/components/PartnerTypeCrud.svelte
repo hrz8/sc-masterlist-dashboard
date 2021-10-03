@@ -138,15 +138,17 @@
     }
   }
 
-  async function deleteRow() {
+  async function deleteRow(id: string) {
     const confirmation = confirm('Are you sure want to delete this row?');
     if (confirmation) {
       try {
         loadingActiveList = true;
         await masterlistService
           .call('partnerType.delete', {
-            params: { id: activeDetail.id }
+            params: { id }
           });
+        activeDetailFetched = false;
+        activeDetail = activeDetailDefault;
         toastSuccess('successfully delete partner type!');
       } catch (error) {
         toastError(`
@@ -274,8 +276,14 @@
               <td class="text-nowrap text-muted">{ type.createdAt }</td>
               <td class="text-nowrap text-muted">{ type.updatedAt }</td>
               <td class="text-nowrap">
-                <button type="button" class="btn btn-danger btn-sm">
-                  <Icon name="trash-fill" />
+                <button
+                  type="button"
+                  class="btn btn-danger btn-sm"
+                  on:click={async () => {
+                    await deleteRow(type.id);
+                    await fetchList();
+                  }}
+                ><Icon name="trash-fill" />
                 </button>
               </td>
             </tr>
