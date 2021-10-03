@@ -68,7 +68,13 @@
     try {
       loadingActiveList = true;
       const { data } = await masterlistService
-        .call<PartnerType[]>('partnerType.list');
+        .call<PartnerType[]>('partnerType.list', {
+          query: {
+            sort: {
+              by: "upddatedAt"
+            }
+          }
+        });
       activeList = data;
       toastSuccess('successfully fetch partner type list!');
     } catch (error) {
@@ -129,6 +135,31 @@
       `);
     } finally {
       loadingActiveDetail = false;
+    }
+  }
+
+  async function deleteRow() {
+    const confirmation = confirm('Are you sure want to delete this row?');
+    if (confirmation) {
+      try {
+        loadingActiveList = true;
+        await masterlistService
+          .call('partnerType.delete', {
+            params: { id: activeDetail.id }
+          });
+        toastSuccess('successfully delete partner type!');
+      } catch (error) {
+        toastError(`
+          error while deleting partner type!<br>
+          reason: ${error.message}${
+            error.errorCode
+            ? `<br>code: [${error.errorCode}]` 
+            : ''
+          }
+        `);
+      } finally {
+        loadingActiveList = false;
+      }
     }
   }
 
