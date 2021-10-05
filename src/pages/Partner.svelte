@@ -5,8 +5,8 @@
   import Select from 'svelte-select';
   import dayjs from 'dayjs';
   import Loading from '../components/shared/Loading.svelte';
-  import PartnerTypeCrud from '../components/PartnerTypeCrud.svelte';
-  import type { RestAPI } from 'src/services/rest/service';
+  import PartnerTypeCrud from '../components/crud-table/PartnerType.svelte';
+  import type { EndpointPayload, RestAPI } from 'src/services/rest/service';
   import type Partner from 'src/types/domains/Partner';
   import type PartnerType from 'src/types/domains/PartnerType';
 
@@ -25,16 +25,52 @@
   // domain props
   let activeList = [] as Partner[];
   let activeDetail = null as Partner;
+  let payloadList = {} as EndpointPayload;
+  let searchBy = "";
+  let searchPartnerTypes = [] as string[];
+  let searchFormValue = "";
 
   // external domain props
   let partnerTypes = [] as PartnerType[];
 
+  // events
   function handleSelect(event: any) {
     console.log("selected item", event.detail);
   }
 
   function handleFormSubmit() {
     console.log("uy");
+  }
+
+  function handleSearchBySelect(e: any) {
+    searchBy = e.currentTarget.value;
+  }
+
+  function handleSearchByUnselect(e: any) {
+    if (searchBy === e.currentTarget.value) {
+      searchBy = "";
+    }
+  }
+
+  function handleSearchPartnerTypeSelect(e: any) {
+    searchPartnerTypes = e.detail.map((v) => v.value);
+  }
+
+  async function handleSearchClick() {
+    payloadList = {}
+    if (searchBy !== "" && searchFormValue !== "") {
+      payloadList = {
+        query: {
+          [searchBy]: {
+            like: searchFormValue,
+          }
+        }
+      }
+    };
+    if (searchPartnerTypes.length) {
+      payloadList.query['partnerTypes'] = { in: searchPartnerTypes };
+    }
+    await fetchList(payloadList);
   }
 
   // method -> services related
@@ -62,10 +98,10 @@
     }
   }
 
-  async function fetchList() {
+  async function fetchList(payload: EndpointPayload = null) {
     try {
       const { data } = await masterlistService
-        .call<Partner[]>('partner.list');
+        .call<Partner[]>('partner.list', payload);
       activeList = data;
       toastSuccess('successfully fetch partner list!');
     } catch (error) {
@@ -86,7 +122,7 @@
   async function fetchPartnerTypes() {
     try {
       const { data }= await masterlistService
-        .call<PartnerType[]>('partnerType.list');
+        .call<PartnerType[]>('partnerType.list', );
       partnerTypes = data;
       toastSuccess('successfully fetch partner type list!');
     } catch (error) {
@@ -277,6 +313,82 @@
     <span class="badge bg-primary">List</span> Partner
   </div>
   <div class="card-body p-3">
+    <div class="row">
+      <div class="col-md-3">
+        <input
+          type="text"
+          class="form-control"
+          bind:value={searchFormValue}
+          placeholder="Search">
+      </div>
+      <div class="col-md-9">
+        <input
+          type="radio"
+          class="btn-check"
+          name="options-outlined"
+          id="searchByName"
+          autocomplete="off"
+          checked={searchBy==='name'}
+          on:change={handleSearchBySelect}
+          on:click={handleSearchByUnselect}
+          value="name">
+        <label
+          class="btn btn-outline-success"
+          for="searchByName"
+        >Name</label>
+        <input
+          type="radio"
+          class="btn-check"
+          name="options-outlined"
+          id="searchByAddress"
+          autocomplete="off"
+          checked={searchBy==='address'}
+          on:change={handleSearchBySelect}
+          on:click={handleSearchByUnselect}
+          value="address">
+        <label
+          class="btn btn-outline-success"
+          for="searchByAddress"
+        >Address/Country</label>
+        <input
+          type="radio"
+          class="btn-check"
+          name="options-outlined"
+          id="searchByContact"
+          autocomplete="off"
+          checked={searchBy==='contact'}
+          on:change={handleSearchBySelect}
+          on:click={handleSearchByUnselect}
+          value="contact">
+        <label
+          class="btn btn-outline-success"
+          for="searchByContact"
+        >Contact</label>
+      </div>
+      <div class="col-md-6 mt-3">
+        <label
+          for="selectSearchType"
+          class="form-label"
+        >Type</label>
+        <Select
+          items={
+            partnerTypes
+              .map((o) => ({ value: o.id, label: o.name }))
+          }
+          value={[]}
+          on:select={handleSearchPartnerTypeSelect}
+          isMulti={true}
+          isClearable={false}
+        ></Select>
+      </div>
+      <div class="col-md-12 mt-2 mb-5">
+        <button
+          on:click={async () => {await handleSearchClick()}}
+          class="btn btn-primary"
+          type="button"
+        >Search</button>
+      </div>
+    </div>
     <div class="table-responsive">
       {#if loadingActiveList}
         <div class="text-center">
