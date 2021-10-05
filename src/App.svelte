@@ -14,15 +14,17 @@
 
   // initialize service
   setContext('masterlistService', new RestAPI(MASTERLIST_BASE_URL, masterlistEndpoints));
-  setContext('toastSuccess', (message: string) => {
+
+  // init context
+  const toastSuccess = (message: string) => {
     toast.push(message, {
       theme: {
         '--toastBackground': '#48BB78',
         '--toastBarBackground': '#2F855A'
       }
     });
-  });
-  setContext('toastError', (message: string) => {
+  };
+  const toastError = (message: string) => {
     toast.push(message, {
       pausable: true,
       theme: {
@@ -30,6 +32,22 @@
         '--toastBarBackground': '#C53030'
       }
     });
+  };
+  setContext('toastSuccess', toastSuccess);
+  setContext('toastError', toastError);
+  setContext('toastErrorWrapper', (error: any, message: string) => {
+    toastError(`
+        ${message}<br>
+        reason: ${error.message}${
+          error.data?.reason
+          ? `, ${error.data.reason}`
+          : ''
+        }${
+          error.errorCode
+          ? `<br>code: [${error.errorCode}]` 
+          : ''
+        }
+      `);
   });
 </script>
 

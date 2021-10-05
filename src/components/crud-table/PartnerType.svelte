@@ -1,7 +1,7 @@
 <script lang="ts">
   import { getContext, onMount } from 'svelte';
-  import { Icon } from 'sveltestrap';
-  import Loading from '../shared/Loading.svelte';
+  import { Icon, Tooltip } from 'sveltestrap';
+  import Loading from '../components/shared/Loading.svelte';
   import type { RestAPI } from 'src/services/rest/service';
   import type PartnerType from 'src/types/domains/PartnerType';
 
@@ -10,6 +10,11 @@
   const masterlistService = getContext('masterlistService') as RestAPI;
   const toastSuccess = getContext('toastSuccess') as (message: string) => void;
   const toastError = getContext('toastError') as (message: string) => void;
+  const toastErrorWrapper = getContext('toastErrorWrapper') as (error, message: string) => void;
+  enum SUBMIT_TYPE {
+    CREATE = "Create",
+    UPDATE = "Update"
+  }
 
   // app props
   let loadingActiveList = true;
@@ -17,12 +22,28 @@
 
   // domain props
   let activeList = [] as PartnerType[];
-  let activeDetail = null as PartnerType;
+  let activeDetailFetched = false;
+  let activeDetail: PartnerType = getActiveDetailDefault();
 
-  function handleFormSubmit() {
-    console.log("SUBMIT PARTNERTYPE");
+  function getActiveDetailDefault(): PartnerType {
+    let activeDetailDefault: PartnerType = {
+      id: "",
+      name: "",
+      description: ""
+    };
+    return activeDetailDefault;
   }
 
+  async function handleFormSubmit(type: SUBMIT_TYPE) {
+    if (type === SUBMIT_TYPE.CREATE) {
+      await createNewRow();
+    } else if (type === SUBMIT_TYPE.UPDATE) {
+      await updateRow();
+    }
+    await fetchList();
+  }
+
+  // method -> services related
   async function openDetail(id: string) {
     loadingActiveDetail = true;
     try {
@@ -31,9 +52,9 @@
           params: { id }
         });
       activeDetail = data;
+      activeDetailFetched = true;
       toastSuccess('successfully fetch partner type detail!');
     } catch (error) {
-      activeDetail = null;
       toastError(`
         error while fetch partner detail!<br>
         reason: ${error.message}${
@@ -42,17 +63,24 @@
           : ''
         }
       `);
+      activeDetailFetched = false;
     } finally {
       loadingActiveDetail = false;
     }
   }
 
-  // method -> services related
   async function fetchList() {
     try {
       loadingActiveList = true;
-      const { data }= await masterlistService
-        .call<PartnerType[]>('partnerType.list');
+      const { data } = await masterlistService
+        .call<PartnerType[]>('partnerType.list', {
+          query: {
+            sort: {
+              by: "updatedAt",
+              mode: "desc"
+            }
+          }
+        });
       activeList = data;
       toastSuccess('successfully fetch partner type list!');
     } catch (error) {
@@ -70,6 +98,73 @@
     }
   }
 
+  async function createNewRow() {
+    try {
+      loadingActiveDetail = true;
+      const { data } = await masterlistService
+        .call<PartnerType>('partnerType.create', {
+          data: activeDetail
+        });
+      activeDetail = data;
+      activeDetail = getActiveDetailDefault();
+      toastSuccess('successfully create partner type!');
+    } catch (error) {
+      toastErrorWrapper(error, 'error while creating partner type!');
+    } finally {
+      loadingActiveDetail = false;
+    }
+  }
+
+  async function updateRow() {
+    try {
+      loadingActiveDetail = true;
+      await masterlistService
+        .call<PartnerType>('partnerType.update', {
+          params: { id: activeDetail.id },
+          data: activeDetail
+        });
+      toastSuccess('successfully update partner type!');
+    } catch (error) {
+      toastError(`
+        error while updating partner type!<br>
+        reason: ${error.message}${
+          error.errorCode
+          ? `<br>code: [${error.errorCode}]` 
+          : ''
+        }
+      `);
+    } finally {
+      loadingActiveDetail = false;
+    }
+  }
+
+  async function deleteRow(id: string) {
+    const confirmation = confirm('Are you sure want to delete this row?');
+    if (confirmation) {
+      try {
+        loadingActiveList = true;
+        await masterlistService
+          .call('partnerType.delete', {
+            params: { id }
+          });
+        activeDetailFetched = false;
+        activeDetail = getActiveDetailDefault();
+        toastSuccess('successfully delete partner type!');
+      } catch (error) {
+        toastError(`
+          error while deleting partner type!<br>
+          reason: ${error.message}${
+            error.errorCode
+            ? `<br>code: [${error.errorCode}]` 
+            : ''
+          }
+        `);
+      } finally {
+        loadingActiveList = false;
+      }
+    }
+  }
+
   onMount(async () => {
     if (params.id) {
       await openDetail(params.id);
@@ -81,7 +176,7 @@
 <!-- FORM -->
 <div class="card mb-3">
   <div class="card-header">
-    {#if activeDetail}
+    {#if activeDetailFetched}
       <span class="badge bg-warning">Update</span>
     {:else}
       <span class="badge bg-success">New</span>
@@ -97,7 +192,9 @@
       </div>
     {:else}
       <form
-        on:submit|preventDefault={handleFormSubmit}
+        on:submit|preventDefault={async () => {
+          await handleFormSubmit(activeDetailFetched ? SUBMIT_TYPE.UPDATE : SUBMIT_TYPE.CREATE)
+        }}
         class="row g-3"
         style="height: 315px; overflow-y: auto;">
         <div class="col-md-12">
@@ -109,7 +206,7 @@
             id="inputName"
             type="text"
             class="form-control"
-            value={activeDetail?.name || ""}
+            bind:value={activeDetail.name}
             required>
         </div>
         <div class="col-md-12">
@@ -121,16 +218,19 @@
             class="form-control"
             id="inputDescription"
             rows="3"
-            value={activeDetail?.description || ""}></textarea>
+            bind:value={activeDetail.description}></textarea>
         </div>
         <div class="col-12">
           <button
             class="btn btn-primary"
             type="submit"
-          >{activeDetail ? 'Update' : 'Add'}</button>
-          {#if activeDetail}
+          >{activeDetailFetched ? SUBMIT_TYPE.UPDATE : SUBMIT_TYPE.CREATE }</button>
+          {#if activeDetailFetched}
             <button
-              on:click={() => {activeDetail = null}}
+              on:click={() => {
+                activeDetail = getActiveDetailDefault();
+                activeDetailFetched = false;
+              }}
               class="btn btn-outline-danger"
               type="button"
             >Cancel</button>
@@ -145,6 +245,16 @@
 <div class="card mb-3">
   <div class="card-header">
     <span class="badge bg-primary">List</span> Partner Type
+    <div class="float-end">
+      <button
+        id="refresh-partnerType"
+        type="button"
+        class="btn btn-success btn-sm"
+        on:click={async () => await fetchList()}
+      ><Icon name="arrow-clockwise" />
+      </button>
+      <Tooltip target="refresh-partnerType" placement="left">Refresh the list</Tooltip>
+    </div>
   </div>
   <div class="card-body p-3">
     <div class="table-responsive">
@@ -164,17 +274,26 @@
             </tr>
           </thead>
           <tbody>
-            {#each activeList as type, i}
+            {#each activeList as type}
             <tr
               on:click={async () => await openDetail(type.id)}
-              style="cursor: pointer;">
+              style={`
+                cursor: pointer;
+                ${activeDetail.id === type.id && 'background-color: #00000013'}
+              `}>
               <td class="text-nowrap">{ type.name }</td>
               <td class="text-nowrap">{ type.description }</td>
               <td class="text-nowrap text-muted">{ type.createdAt }</td>
               <td class="text-nowrap text-muted">{ type.updatedAt }</td>
               <td class="text-nowrap">
-                <button type="button" class="btn btn-danger btn-sm">
-                  <Icon name="trash-fill" />
+                <button
+                  type="button"
+                  class="btn btn-danger btn-sm"
+                  on:click={async () => {
+                    await deleteRow(type.id);
+                    await fetchList();
+                  }}
+                ><Icon name="trash-fill" />
                 </button>
               </td>
             </tr>
