@@ -21,7 +21,7 @@
   let loadingActiveDetail = false;
   let activePage = 1;
   let totalPage = 0;
-  let rowsPerPage = 5;
+  let rowsPerPage = 10;
 
   // domain props
   let activeList = [] as PartnerType[];
@@ -266,6 +266,23 @@
     </div>
   </div>
   <div class="card-body p-3">
+    <div class="container mb-3">
+      <div class="row justify-content-end">
+        <div class="col-md-3">
+          <label for="#selectMaxRows">Shows</label>
+          <select
+            id="selectMaxRows"
+            class="form-select"
+            aria-label="select max rows showing"
+            bind:value={rowsPerPage}
+            on:change={async () => await fetchList()}>
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+          </select>
+        </div>
+      </div>
+    </div>
     <div class="table-responsive">
       {#if loadingActiveList}
         <div class="text-center">
