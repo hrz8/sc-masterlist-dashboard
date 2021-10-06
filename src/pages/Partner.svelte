@@ -145,7 +145,13 @@
     await fetchList();
     // fetch other items from relationship
     await fetchPartnerTypes();
-});
+
+    // event registeration
+    const partnerTypeModal = document.querySelector('#partnerTypeModal');
+    partnerTypeModal.addEventListener('hidden.bs.modal', async function() {
+      await fetchPartnerTypes();
+    });
+  });
 </script>
 
 <div id="toast" aria-live="polite" aria-atomic="true" class="position-relative"></div>
