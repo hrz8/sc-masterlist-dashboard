@@ -19,6 +19,9 @@
   // app props
   let loadingActiveList = true;
   let loadingActiveDetail = false;
+  let activePage = 1;
+  let totalPage = 0;
+  let rowsPerPage = 5;
 
   // domain props
   let activeList = [] as PartnerType[];
@@ -72,16 +75,22 @@
   async function fetchList() {
     try {
       loadingActiveList = true;
-      const { data } = await masterlistService
+      const { data, meta } = await masterlistService
         .call<PartnerType[]>('partnerType.list', {
           query: {
             sort: {
               by: "updatedAt",
               mode: "desc"
+            },
+            pagination: {
+              page: activePage,
+              limit: rowsPerPage
             }
           }
         });
       activeList = data;
+      totalPage = Math.ceil(meta.total/rowsPerPage);
+      console.log(totalPage);
       toastSuccess('successfully fetch partner type list!');
     } catch (error) {
       activeList = [];
@@ -303,4 +312,49 @@
       {/if}
     </div>
   </div>
+</div>
+
+<!-- PAGINATION -->
+<div class="float-end">
+  <nav aria-label="Page navigation example">
+    <ul class="pagination">
+      <li class="page-item {activePage === 1 ? 'disabled' : ''}">
+        <button
+          class="page-link"
+          aria-label="Previous"
+          on:click={async () => {
+            activePage--;
+            await fetchList();
+          }}
+        >
+          <span aria-hidden="true">&laquo;</span>
+        </button>
+      </li>
+      {#each Array(totalPage) as _, i }
+        <li class="page-item {activePage === i + 1 ? 'active' : ''}">
+          <button
+            class="page-link"
+            on:click={async () => {
+              if (activePage !== i + 1) {
+                activePage = i + 1;
+                await fetchList();
+              }
+            }}
+          >{i + 1}</button>
+        </li>
+      {/each}
+      <li class="page-item {activePage === totalPage ? 'disabled' : ''}">
+        <button
+          class="page-link"
+          aria-label="Next"
+          on:click={async () => {
+            activePage++;
+            await fetchList();
+          }}
+        >
+          <span aria-hidden="true">&raquo;</span>
+        </button>
+      </li>
+    </ul>
+  </nav>
 </div>
