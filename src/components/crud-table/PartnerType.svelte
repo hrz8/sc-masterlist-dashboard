@@ -266,20 +266,58 @@
     </div>
   </div>
   <div class="card-body p-3">
-    <div class="container mb-3">
-      <div class="row justify-content-end">
-        <div class="col-md-3">
-          <label for="#selectMaxRows">Shows</label>
-          <select
-            id="selectMaxRows"
-            class="form-select"
-            aria-label="select max rows showing"
-            bind:value={rowsPerPage}
-            on:change={async () => await fetchList()}>
-            <option value={10}>10</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-          </select>
+    <div class="row">
+      <!-- search form -->
+      <div class="col-md-3">
+        <input
+          type="text"
+          class="form-control"
+          value=""
+          placeholder="Search">
+      </div>
+      <!-- search selector -->
+      <div class="col-md-6">
+        <input
+          type="radio"
+          class="btn-check"
+          name="options-outlined"
+          id="searchByName"
+          autocomplete="off"
+          value="name">
+        <label
+          class="btn btn-outline-success"
+          for="searchByName"
+        >Name</label>
+        <input
+          type="radio"
+          class="btn-check"
+          name="options-outlined"
+          id="searchByAddress"
+          autocomplete="off"
+          value="address">
+        <label
+          class="btn btn-outline-success"
+          for="searchByAddress"
+        >Address/Country</label>
+      </div>
+      <!-- mas rows -->
+      <div class="col-md-3">
+        <div class="row">
+          <label
+            for="#selectMaxRows"
+            class="col-sm-4 col-form-label">Shows</label>
+          <div class="col-sm-8">
+            <select
+              id="selectMaxRows"
+              class="form-select"
+              aria-label="select max rows showing"
+              bind:value={rowsPerPage}
+              on:change={async () => await fetchList()}>
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </select>
+          </div>
         </div>
       </div>
     </div>
