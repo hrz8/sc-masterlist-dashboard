@@ -26,9 +26,9 @@
   let activeList = [] as Partner[];
   let activeDetail = null as Partner;
   let payloadList = {} as EndpointPayload;
+  let searchFormValue = "";
   let searchBy = "";
   let searchPartnerTypes = [] as string[];
-  let searchFormValue = "";
 
   // external domain props
   let partnerTypes = [] as PartnerType[];
@@ -40,16 +40,6 @@
 
   function handleFormSubmit() {
     console.log("uy");
-  }
-
-  function handleSearchBySelect(e: any) {
-    searchBy = e.currentTarget.value;
-  }
-
-  function handleSearchByUnselect(e: any) {
-    if (searchBy === e.currentTarget.value) {
-      searchBy = "";
-    }
   }
 
   function handleSearchPartnerTypeSelect(e: any) {
@@ -335,8 +325,14 @@
           id="searchByName"
           autocomplete="off"
           checked={searchBy==='name'}
-          on:change={handleSearchBySelect}
-          on:click={handleSearchByUnselect}
+          on:change={(e) => {
+            searchBy = e.currentTarget.value;
+          }}
+          on:click={(e) => {
+            if (searchBy === e.currentTarget.value) {
+              searchBy = "";
+            }
+          }}
           value="name">
         <label
           class="btn btn-outline-success"
@@ -349,8 +345,14 @@
           id="searchByAddress"
           autocomplete="off"
           checked={searchBy==='address'}
-          on:change={handleSearchBySelect}
-          on:click={handleSearchByUnselect}
+          on:change={(e) => {
+            searchBy = e.currentTarget.value;
+          }}
+          on:click={(e) => {
+            if (searchBy === e.currentTarget.value) {
+              searchBy = "";
+            }
+          }}
           value="address">
         <label
           class="btn btn-outline-success"
@@ -363,8 +365,14 @@
           id="searchByContact"
           autocomplete="off"
           checked={searchBy==='contact'}
-          on:change={handleSearchBySelect}
-          on:click={handleSearchByUnselect}
+          on:change={(e) => {
+            searchBy = e.currentTarget.value;
+          }}
+          on:click={(e) => {
+            if (searchBy === e.currentTarget.value) {
+              searchBy = "";
+            }
+          }}
           value="contact">
         <label
           class="btn btn-outline-success"
@@ -389,7 +397,7 @@
       </div>
       <div class="col-md-12 mt-2 mb-5">
         <button
-          on:click={async () => {await handleSearchClick()}}
+          on:click={async () => await handleSearchClick()}
           class="btn btn-primary"
           type="button"
         >Search</button>

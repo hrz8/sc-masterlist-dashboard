@@ -9,7 +9,6 @@
 
   const masterlistService = getContext('masterlistService') as RestAPI;
   const toastSuccess = getContext('toastSuccess') as (message: string) => void;
-  const toastError = getContext('toastError') as (message: string) => void;
   const toastErrorWrapper = getContext('toastErrorWrapper') as (error, message: string) => void;
   enum SUBMIT_TYPE {
     CREATE = "Create",
@@ -27,6 +26,8 @@
   let activeList = [] as PartnerType[];
   let activeDetailFetched = false;
   let activeDetail: PartnerType = getActiveDetailDefault();
+  let searchBy = "";
+  let searchFormValue = "";
 
   function getActiveDetailDefault(): PartnerType {
     let activeDetailDefault: PartnerType = {
@@ -58,15 +59,8 @@
       activeDetailFetched = true;
       toastSuccess('successfully fetch partner type detail!');
     } catch (error) {
-      toastError(`
-        error while fetch partner detail!<br>
-        reason: ${error.message}${
-          error.errorCode
-          ? `<br>code: [${error.errorCode}]` 
-          : ''
-        }
-      `);
       activeDetailFetched = false;
+      toastErrorWrapper(error, 'error while fetch partner detail!');
     } finally {
       loadingActiveDetail = false;
     }
@@ -90,18 +84,10 @@
         });
       activeList = data;
       totalPage = Math.ceil(meta.total/rowsPerPage);
-      console.log(totalPage);
       toastSuccess('successfully fetch partner type list!');
     } catch (error) {
       activeList = [];
-      toastError(`
-        error while fetch partner type list!<br>
-        reason: ${error.message}${
-          error.errorCode
-          ? `<br>code: [${error.errorCode}]` 
-          : ''
-        }
-      `);
+      toastErrorWrapper(error, 'error while fetch partner type list!');
     } finally {
       loadingActiveList = false;
     }
@@ -134,14 +120,7 @@
         });
       toastSuccess('successfully update partner type!');
     } catch (error) {
-      toastError(`
-        error while updating partner type!<br>
-        reason: ${error.message}${
-          error.errorCode
-          ? `<br>code: [${error.errorCode}]` 
-          : ''
-        }
-      `);
+      toastErrorWrapper(error, 'error while updating partner type!');
     } finally {
       loadingActiveDetail = false;
     }
@@ -160,14 +139,7 @@
         activeDetail = getActiveDetailDefault();
         toastSuccess('successfully delete partner type!');
       } catch (error) {
-        toastError(`
-          error while deleting partner type!<br>
-          reason: ${error.message}${
-            error.errorCode
-            ? `<br>code: [${error.errorCode}]` 
-            : ''
-          }
-        `);
+        toastErrorWrapper(error, 'error while deleting partner type!');
       } finally {
         loadingActiveList = false;
       }
@@ -272,7 +244,7 @@
         <input
           type="text"
           class="form-control"
-          value=""
+          bind:value={searchFormValue}
           placeholder="Search">
       </div>
       <!-- search selector -->
@@ -281,32 +253,46 @@
           type="radio"
           class="btn-check"
           name="options-outlined"
-          id="searchByName"
+          id="searchByPartnerTypeName"
           autocomplete="off"
+          checked={searchBy==='name'}
+          on:change={(e) => searchBy = e.currentTarget.value }
+          on:click={(e) => {
+            if (searchBy === e.currentTarget.value) {
+              searchBy = "";
+            }
+          }}
           value="name">
         <label
           class="btn btn-outline-success"
-          for="searchByName"
+          for="searchByPartnerTypeName"
         >Name</label>
         <input
           type="radio"
           class="btn-check"
           name="options-outlined"
-          id="searchByAddress"
+          id="searchByPartnerTypeDescription"
           autocomplete="off"
-          value="address">
+          checked={searchBy==='description'}
+          on:change={(e) => searchBy = e.currentTarget.value }
+          on:click={(e) => {
+            if (searchBy === e.currentTarget.value) {
+              searchBy = "";
+            }
+          }}
+          value="description">
         <label
           class="btn btn-outline-success"
-          for="searchByAddress"
-        >Address/Country</label>
+          for="searchByPartnerTypeDescription"
+        >Description</label>
       </div>
-      <!-- mas rows -->
+      <!-- maximum rows -->
       <div class="col-md-3">
         <div class="row">
           <label
             for="#selectMaxRows"
-            class="col-sm-4 col-form-label">Shows</label>
-          <div class="col-sm-8">
+            class="col-lg-4 col-form-label">Shows</label>
+          <div class="col-lg-8">
             <select
               id="selectMaxRows"
               class="form-select"
@@ -319,6 +305,13 @@
             </select>
           </div>
         </div>
+      </div>
+      <div class="col-md-12 mt-2 mb-5">
+        <button
+          on:click={async () => console.log("lol")}
+          class="btn btn-primary"
+          type="button"
+        >Search</button>
       </div>
     </div>
     <div class="table-responsive">
