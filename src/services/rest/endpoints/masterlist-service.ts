@@ -5,16 +5,24 @@ export const BASE_URL = 'http://localhost:3999/api'
 
 export const endpoints: EndpointMap = {
   partner: {
-    create: {
-      method: HTTPMethod.POST,
-      url: '/v1/partner'
-    },
     list: {
       method: HTTPMethod.GET,
       url: '/v1/partner'
     },
     detail: {
       method: HTTPMethod.GET,
+      url: '/v1/partner/:id'
+    },
+    create: {
+      method: HTTPMethod.POST,
+      url: '/v1/partner'
+    },
+    update: {
+      method: HTTPMethod.PUT,
+      url: '/v1/partner/:id'
+    },
+    delete: {
+      method: HTTPMethod.DELETE,
       url: '/v1/partner/:id'
     }
   },
@@ -38,7 +46,7 @@ export const endpoints: EndpointMap = {
     delete: {
       method: HTTPMethod.DELETE,
       url: '/v1/partner-type/:id'
-    },
+    }
   }
 }
 
