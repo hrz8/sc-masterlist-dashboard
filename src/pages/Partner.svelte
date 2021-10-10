@@ -99,9 +99,11 @@
 
   $: {
     // detail handler
-    activeDropdownPartnerTypesValue = !activeDetailFetched
-      ? []
-      : activeDetail.partnerTypes.map((o) => ({ value: o.id, label: o.name }))
+    if (activeDetailFetched) {
+      activeDropdownPartnerTypesValue = activeDetail
+        .partnerTypes
+        .map((o) => ({ value: o.id, label: o.name }));
+    }
     // payload handler
     payloadList = payloadListDefault();
     if (searchBy !== "" && searchFormValue !== "") {
@@ -165,6 +167,7 @@
           }
         });
       activeDetail = activeDetailDefault();
+      activeDropdownPartnerTypesList = [];
       toastSuccess('successfully create partner!');
     } catch (error) {
       toastErrorWrapper(
@@ -431,7 +434,9 @@
       >Refresh the list</Tooltip>
     </div>
   </div>
-  <div class="card-body p-3">
+  <div
+    class="card-body p-3"
+    style="height: 400px; overflow-y: auto;">
     <div class="row">
       <!-- search form -->
       <div class="col-md-3">
