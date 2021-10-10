@@ -2,7 +2,7 @@
   import { getContext, onMount } from 'svelte';
   import { Icon, Tooltip } from 'sveltestrap';
   import Loading from '../shared/Loading.svelte';
-  import type { RestAPI } from 'src/services/rest/service';
+  import type { EndpointPayload, RestAPI } from 'src/services/rest/service';
   import type PartnerType from 'src/types/domains/PartnerType';
 
   export let params = {} as  { id: string };
@@ -18,19 +18,37 @@
   // app props
   let loadingActiveList = true;
   let loadingActiveDetail = false;
-  let activePage = 1;
   let totalPage = 0;
-  let rowsPerPage = 10;
 
   // domain props
   let activeList = [] as PartnerType[];
   let activeDetailFetched = false;
   let activeDetail: PartnerType = getActiveDetailDefault();
+  let payloadList = {
+    query: {
+      sort: {
+        by: "updatedAt",
+        mode: "desc"
+      },
+      pagination: {
+        page: 1,
+        limit: 10
+      }
+    }
+  };
   let searchBy = "";
   let searchFormValue = "";
 
+  $: {
+    if (searchBy !== "" && searchFormValue !== "") {
+      payloadList.query[searchBy] = {
+        like: searchFormValue
+      };
+    }
+  }
+
   function getActiveDetailDefault(): PartnerType {
-    let activeDetailDefault: PartnerType = {
+    const activeDetailDefault: PartnerType = {
       id: "",
       name: "",
       description: ""
@@ -38,6 +56,7 @@
     return activeDetailDefault;
   }
 
+  // #region component event handlers
   async function handleFormSubmit(type: SUBMIT_TYPE) {
     if (type === SUBMIT_TYPE.CREATE) {
       await createNewRow();
@@ -46,8 +65,9 @@
     }
     await fetchList();
   }
+  // #endregion
 
-  // method -> services related
+  // #region method -> services related
   async function openDetail(id: string) {
     loadingActiveDetail = true;
     try {
@@ -60,7 +80,10 @@
       toastSuccess('successfully fetch partner type detail!');
     } catch (error) {
       activeDetailFetched = false;
-      toastErrorWrapper(error, 'error while fetch partner detail!');
+      toastErrorWrapper(
+        error,
+        'error while fetch partner detail!'
+      );
     } finally {
       loadingActiveDetail = false;
     }
@@ -70,24 +93,16 @@
     try {
       loadingActiveList = true;
       const { data, meta } = await masterlistService
-        .call<PartnerType[]>('partnerType.list', {
-          query: {
-            sort: {
-              by: "updatedAt",
-              mode: "desc"
-            },
-            pagination: {
-              page: activePage,
-              limit: rowsPerPage
-            }
-          }
-        });
+        .call<PartnerType[]>('partnerType.list', payloadList);
       activeList = data;
-      totalPage = Math.ceil(meta.total/rowsPerPage);
+      totalPage = Math.ceil(meta.total/payloadList.query.pagination.limit);
       toastSuccess('successfully fetch partner type list!');
     } catch (error) {
       activeList = [];
-      toastErrorWrapper(error, 'error while fetch partner type list!');
+      toastErrorWrapper(
+        error,
+        'error while fetch partner type list!'
+      );
     } finally {
       loadingActiveList = false;
     }
@@ -104,7 +119,10 @@
       activeDetail = getActiveDetailDefault();
       toastSuccess('successfully create partner type!');
     } catch (error) {
-      toastErrorWrapper(error, 'error while creating partner type!');
+      toastErrorWrapper(
+        error,
+        'error while creating partner type!'
+      );
     } finally {
       loadingActiveDetail = false;
     }
@@ -120,7 +138,10 @@
         });
       toastSuccess('successfully update partner type!');
     } catch (error) {
-      toastErrorWrapper(error, 'error while updating partner type!');
+      toastErrorWrapper(
+        error,
+        'error while updating partner type!'
+      );
     } finally {
       loadingActiveDetail = false;
     }
@@ -139,19 +160,25 @@
         activeDetail = getActiveDetailDefault();
         toastSuccess('successfully delete partner type!');
       } catch (error) {
-        toastErrorWrapper(error, 'error while deleting partner type!');
+        toastErrorWrapper(
+          error,
+          'error while deleting partner type!'
+        );
       } finally {
         loadingActiveList = false;
       }
     }
   }
+  // #endregion
 
+  // #region svelte events
   onMount(async () => {
     if (params.id) {
       await openDetail(params.id);
     }
     await fetchList();
-});
+  });
+  // #endregion
 </script>
 
 <!-- FORM -->
@@ -234,7 +261,10 @@
         on:click={async () => await fetchList()}
       ><Icon name="arrow-clockwise" />
       </button>
-      <Tooltip target="refresh-partnerType" placement="left">Refresh the list</Tooltip>
+      <Tooltip
+        target="refresh-partnerType"
+        placement="left"
+      >Refresh the list</Tooltip>
     </div>
   </div>
   <div class="card-body p-3">
@@ -297,7 +327,7 @@
               id="selectMaxRows"
               class="form-select"
               aria-label="select max rows showing"
-              bind:value={rowsPerPage}
+              bind:value={payloadList.query.pagination.limit}
               on:change={async () => await fetchList()}>
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -308,7 +338,7 @@
       </div>
       <div class="col-md-12 mt-2 mb-5">
         <button
-          on:click={async () => console.log("lol")}
+          on:click={async () => await fetchList()}
           class="btn btn-primary"
           type="button"
         >Search</button>
@@ -366,12 +396,12 @@
 <div class="float-end">
   <nav aria-label="Page navigation example">
     <ul class="pagination">
-      <li class="page-item {activePage === 1 ? 'disabled' : ''}">
+      <li class="page-item {payloadList.query.pagination.page === 1 ? 'disabled' : ''}">
         <button
           class="page-link"
           aria-label="Previous"
           on:click={async () => {
-            activePage--;
+            payloadList.query.pagination.page--;
             await fetchList();
           }}
         >
@@ -379,24 +409,26 @@
         </button>
       </li>
       {#each Array(totalPage) as _, i }
-        <li class="page-item {activePage === i + 1 ? 'active' : ''}">
+        <li
+          class="page-item {payloadList.query.pagination.page === i + 1 ? 'active' : ''}">
           <button
             class="page-link"
             on:click={async () => {
-              if (activePage !== i + 1) {
-                activePage = i + 1;
+              if (payloadList.query.pagination.page !== i + 1) {
+                payloadList.query.pagination.page = i + 1;
                 await fetchList();
               }
             }}
           >{i + 1}</button>
         </li>
       {/each}
-      <li class="page-item {activePage === totalPage ? 'disabled' : ''}">
+      <li
+        class="page-item {payloadList.query.pagination.page === totalPage ? 'disabled' : ''}">
         <button
           class="page-link"
           aria-label="Next"
           on:click={async () => {
-            activePage++;
+            payloadList.query.pagination.page++;
             await fetchList();
           }}
         >
