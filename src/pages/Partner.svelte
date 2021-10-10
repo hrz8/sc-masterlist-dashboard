@@ -14,7 +14,7 @@
 
   const masterlistService = getContext('masterlistService') as RestAPI;
   const toastSuccess = getContext('toastSuccess') as (message: string) => void;
-  const toastError = getContext('toastError') as (message: string) => void;
+  const toastErrorWrapper = getContext('toastErrorWrapper') as (error, message: string) => void;
 
   const activeRoute = 'partner-list';
 
@@ -66,25 +66,7 @@
     if (searchPartnerTypes.length) {
       payloadList.query['partnerTypes'] = { in: searchPartnerTypes };
     }
-    console.log(payloadList);
   }
-
-  // async function handleSearchClick() {
-  //   payloadList = {}
-  //   if (searchBy !== "" && searchFormValue !== "") {
-  //     payloadList = {
-  //       query: {
-  //         [searchBy]: {
-  //           like: searchFormValue
-  //         }
-  //       }
-  //     }
-  //   };
-  //   if (searchPartnerTypes.length) {
-  //     payloadList.query['partnerTypes'] = { in: searchPartnerTypes };
-  //   }
-  //   await fetchList();
-  // }
 
   // method -> services related
   async function openDetail(id: string) {
@@ -98,14 +80,10 @@
       toastSuccess('successfully fetch partner detail!');
     } catch (error) {
       activeDetail = null;
-      toastError(`
-        error while fetch partner detail!<br>
-        reason: ${error.message}${
-          error.errorCode
-          ? `<br>code: [${error.errorCode}]` 
-          : ''
-        }
-      `);
+      toastErrorWrapper(
+        error,
+        'error while fetch partner detail!'
+      );
     } finally {
       loadingActiveDetail = false;
     }
@@ -119,14 +97,10 @@
       toastSuccess('successfully fetch partner list!');
     } catch (error) {
       activeList = [];
-      toastError(`
-        error while fetch partner list!<br>
-        reason: ${error.message}${
-          error.errorCode
-          ? `<br>code: [${error.errorCode}]` 
-          : ''
-        }
-      `);
+      toastErrorWrapper(
+        error,
+        'error while fetch partner list!'
+      );
     } finally {
       loadingActiveList = false;
     }
@@ -140,14 +114,10 @@
       toastSuccess('successfully fetch partner type list!');
     } catch (error) {
       partnerTypes = [];
-      toastError(`
-        error while fetch partner type list!<br>
-        reason: ${error.message}${
-          error.errorCode
-          ? `<br>code: [${error.errorCode}]` 
-          : ''
-        }
-      `);
+      toastErrorWrapper(
+        error,
+        'error while fetch partner type list!'
+      );
     }
   }
 
@@ -285,24 +255,24 @@
                 title={`Material List of ${activeDetail.name}`}
               >
                 <div class="table-responsive">
-                    <table class="table table-hover">
-                      <thead>
-                        <tr>
-                          <th scope="col">#</th>
-                          <th scope="col">TSM</th>
-                          <th scope="col">Material Grade</th>
+                  <table class="table table-hover">
+                    <thead>
+                      <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">TSM</th>
+                        <th scope="col">Material Grade</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {#each activeDetail.materials || [] as material, i}
+                        <tr style="cursor: pointer;">
+                          <th scope="row">{ i + 1 }</th>
+                          <td class="text-nowrap">{ material.tsm }</td>
+                          <td class="text-nowrap">{ material.materialGrade.code }</td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {#each activeDetail.materials || [] as material, i}
-                          <tr style="cursor: pointer;">
-                            <th scope="row">{ i + 1 }</th>
-                            <td class="text-nowrap">{ material.tsm }</td>
-                            <td class="text-nowrap">{ material.materialGrade.code }</td>
-                          </tr>
-                        {/each}
-                      </tbody>
-                    </table>
+                      {/each}
+                    </tbody>
+                  </table>
                 </div>
               </Popover>
             </div>
