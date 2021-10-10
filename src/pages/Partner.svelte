@@ -208,11 +208,12 @@
       try {
         loadingActiveList = true;
         await masterlistService
-          .call('partnerType.delete', {
+          .call('partner.delete', {
             params: { id }
           });
         activeDetailFetched = false;
         activeDetail = activeDetailDefault();
+        activeDropdownPartnerTypesList = [];
         toastSuccess('successfully delete partner!');
       } catch (error) {
         toastErrorWrapper(
