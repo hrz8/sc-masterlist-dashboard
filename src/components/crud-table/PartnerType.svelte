@@ -1,6 +1,7 @@
 <script lang="ts">
   import { getContext, onMount } from 'svelte';
   import { Icon, Tooltip } from 'sveltestrap';
+  import dayjs from 'dayjs';
   import Loading from '../shared/Loading.svelte';
   import type { EndpointPayload, RestAPI } from 'src/services/rest/service';
   import type PartnerType from 'src/types/domains/PartnerType';
@@ -15,16 +16,13 @@
     UPDATE = "Update"
   }
 
-  // app props
-  let loadingActiveList = true;
-  let loadingActiveDetail = false;
-  let totalPage = 0;
-
-  // domain props
-  let activeList = [] as PartnerType[];
-  let activeDetailFetched = false;
-  let activeDetail: PartnerType = getActiveDetailDefault();
-  let payloadList = {
+  // constant default props
+  const activeDetailDefault = (): PartnerType => ({
+    id: "",
+    name: "",
+    description: ""
+  });
+  const payloadListDefault = (): EndpointPayload => ({
     query: {
       sort: {
         by: "updatedAt",
@@ -35,25 +33,30 @@
         limit: 10
       }
     }
-  } as EndpointPayload;
+  });
+
+  // app props
+  let loadingActiveList = true;
+  let loadingActiveDetail = false;
+  let totalPage = 0;
+
+  // domain props
+  let activeList = [] as PartnerType[];
+  let activeDetailFetched = false;
+  let activeDetail: PartnerType = activeDetailDefault();
+  let payloadList: EndpointPayload = payloadListDefault();
+
+  // search form
   let searchBy = "";
   let searchFormValue = "";
 
   $: {
+    payloadList = payloadListDefault();
     if (searchBy !== "" && searchFormValue !== "") {
       payloadList.query[searchBy] = {
         like: searchFormValue
       };
     }
-  }
-
-  function getActiveDetailDefault(): PartnerType {
-    const activeDetailDefault: PartnerType = {
-      id: "",
-      name: "",
-      description: ""
-    };
-    return activeDetailDefault;
   }
 
   // #region component event handlers
@@ -111,12 +114,11 @@
   async function createNewRow() {
     try {
       loadingActiveDetail = true;
-      const { data } = await masterlistService
+      await masterlistService
         .call<PartnerType>('partnerType.create', {
           data: activeDetail
         });
-      activeDetail = data;
-      activeDetail = getActiveDetailDefault();
+      activeDetail = activeDetailDefault();
       toastSuccess('successfully create partner type!');
     } catch (error) {
       toastErrorWrapper(
@@ -157,7 +159,7 @@
             params: { id }
           });
         activeDetailFetched = false;
-        activeDetail = getActiveDetailDefault();
+        activeDetail = activeDetailDefault();
         toastSuccess('successfully delete partner type!');
       } catch (error) {
         toastErrorWrapper(
@@ -236,7 +238,7 @@
           {#if activeDetailFetched}
             <button
               on:click={() => {
-                activeDetail = getActiveDetailDefault();
+                activeDetail = activeDetailDefault();
                 activeDetailFetched = false;
               }}
               class="btn btn-outline-danger"
@@ -277,7 +279,7 @@
           bind:value={searchFormValue}
           placeholder="Search">
       </div>
-      <!-- search selector -->
+      <!-- search selectors -->
       <div class="col-md-6">
         <input
           type="radio"
@@ -361,23 +363,27 @@
             </tr>
           </thead>
           <tbody>
-            {#each activeList as type}
+            {#each activeList as item}
             <tr
-              on:click={async () => await openDetail(type.id)}
+              on:click={async () => await openDetail(item.id)}
               style={`
                 cursor: pointer;
-                ${activeDetail.id === type.id && 'background-color: #00000013'}
+                ${activeDetail.id === item.id && 'background-color: #00000013'}
               `}>
-              <td class="text-nowrap">{ type.name }</td>
-              <td class="text-nowrap">{ type.description }</td>
-              <td class="text-nowrap text-muted">{ type.createdAt }</td>
-              <td class="text-nowrap text-muted">{ type.updatedAt }</td>
+              <td class="text-nowrap">{ item.name }</td>
+              <td class="text-nowrap">{ item.description }</td>
+              <td class="text-nowrap text-muted">
+                { dayjs(item.createdAt).format('DD/MM/YYYY HH:mm:ss') }
+              </td>
+              <td class="text-nowrap text-muted">
+                { dayjs(item.createdAt).format('DD/MM/YYYY HH:mm:ss') }
+              </td>
               <td class="text-nowrap">
                 <button
                   type="button"
                   class="btn btn-danger btn-sm"
                   on:click={async () => {
-                    await deleteRow(type.id);
+                    await deleteRow(item.id);
                     await fetchList();
                   }}
                 ><Icon name="trash-fill" />

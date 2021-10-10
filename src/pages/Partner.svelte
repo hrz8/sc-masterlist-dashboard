@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getContext, onMount } from 'svelte';
-  import { Icon, Popover } from 'sveltestrap';
+  import { Icon, Popover, Tooltip } from 'sveltestrap';
   import { push } from 'svelte-spa-router';
   import Select from 'svelte-select';
   import dayjs from 'dayjs';
@@ -15,17 +15,23 @@
   const masterlistService = getContext('masterlistService') as RestAPI;
   const toastSuccess = getContext('toastSuccess') as (message: string) => void;
   const toastErrorWrapper = getContext('toastErrorWrapper') as (error, message: string) => void;
+  enum SUBMIT_TYPE {
+    CREATE = "Create",
+    UPDATE = "Update"
+  }
 
   const activeRoute = 'partner-list';
 
-  // app props
-  let loadingActiveList = true;
-  let loadingActiveDetail = false;
-
-  // domain props
-  let activeList = [] as Partner[];
-  let activeDetail = null as Partner;
-  let payloadList = {
+  // constant default props
+  const activeDetailDefault = (): Partner => ({
+    id: "",
+    name: "",
+    address: "",
+    contact: "",
+    description: "",
+    partnerTypes: []
+  });
+  const payloadListDefault = (): EndpointPayload => ({
     query: {
       sort: {
         by: "updatedAt",
@@ -36,39 +42,79 @@
         limit: 10
       }
     }
-  } as EndpointPayload;
-  let searchFormValue = "";
+  });
+
+  // app props
+  let loadingActiveList = true;
+  let loadingActiveDetail = false;
+  let totalPage = 0;
+
+  // domain props
+  let activeList = [] as Partner[];
+  let activeDetailFetched = false;
+  let activeDetail: Partner = activeDetailDefault();
+  let payloadList: EndpointPayload = payloadListDefault();
+
+  // active relation props
+  let activeDropdownPartnerTypesList = [] as string[];
+  let activeDropdownPartnerTypesValue = [] as {
+    label: string,
+    value: string
+  }[];
+
+  // search form
   let searchBy = "";
+  let searchFormValue = "";
   let searchPartnerTypes = [] as string[];
 
   // external domain props
   let partnerTypes = [] as PartnerType[];
 
-  // events
-  function handleSelect(event: any) {
-    console.log("selected item", event.detail);
+  // #region component event handlers
+  function handleActiveDropdownPartnerTypeSelect(
+    event: {
+      detail: {
+        label: string,
+        value: string
+      }[]
+    }
+  ) {
+    activeDropdownPartnerTypesList = event.detail.map((o) => o.value);
+    activeDropdownPartnerTypesValue = event.detail;
   }
 
-  function handleFormSubmit() {
-    console.log("uy");
+  async function handleFormSubmit(type: SUBMIT_TYPE) {
+    if (type === SUBMIT_TYPE.CREATE) {
+      await createNewRow();
+    } else if (type === SUBMIT_TYPE.UPDATE) {
+      await updateRow();
+    }
+    await fetchList();
   }
 
   function handleSearchPartnerTypeSelect(e: any) {
-    searchPartnerTypes = e.detail.map((v) => v.value);
+    searchPartnerTypes = e.detail?.map((v) => v.value);
   }
+  // #endregion
 
   $: {
+    // detail handler
+    activeDropdownPartnerTypesValue = !activeDetailFetched
+      ? []
+      : activeDetail.partnerTypes.map((o) => ({ value: o.id, label: o.name }))
+    // payload handler
+    payloadList = payloadListDefault();
     if (searchBy !== "" && searchFormValue !== "") {
       payloadList.query[searchBy] = {
         like: searchFormValue
       };
     };
-    if (searchPartnerTypes.length) {
-      payloadList.query['partnerTypes'] = { in: searchPartnerTypes };
+    if (searchPartnerTypes?.length) {
+      payloadList.query['partnerTypes'] = { in: searchPartnerTypes.join(',') };
     }
   }
 
-  // method -> services related
+  // #region method -> services related
   async function openDetail(id: string) {
     loadingActiveDetail = true;
     try {
@@ -77,9 +123,10 @@
           params: { id }
         });
       activeDetail = data;
+      activeDetailFetched = true;
       toastSuccess('successfully fetch partner detail!');
     } catch (error) {
-      activeDetail = null;
+      activeDetailFetched = false;
       toastErrorWrapper(
         error,
         'error while fetch partner detail!'
@@ -91,9 +138,10 @@
 
   async function fetchList() {
     try {
-      const { data } = await masterlistService
+      const { data, meta } = await masterlistService
         .call<Partner[]>('partner.list', payloadList);
       activeList = data;
+      totalPage = Math.ceil(meta.total/payloadList.query.pagination.limit);
       toastSuccess('successfully fetch partner list!');
     } catch (error) {
       activeList = [];
@@ -103,6 +151,74 @@
       );
     } finally {
       loadingActiveList = false;
+    }
+  }
+
+  async function createNewRow() {
+    try {
+      loadingActiveDetail = true;
+      await masterlistService
+        .call<Partner>('partner.create', {
+          data: {
+            ...activeDetail,
+            partnerTypes: activeDropdownPartnerTypesList
+          }
+        });
+      activeDetail = activeDetailDefault();
+      toastSuccess('successfully create partner!');
+    } catch (error) {
+      toastErrorWrapper(
+        error,
+        'error while creating partner!'
+      );
+    } finally {
+      loadingActiveDetail = false;
+    }
+  }
+
+  async function updateRow() {
+    try {
+      loadingActiveDetail = true;
+      await masterlistService
+        .call<Partner>('partner.update', {
+          params: { id: activeDetail.id },
+          data: {
+            ...activeDetail,
+            partnerTypes: activeDropdownPartnerTypesList,
+            materials: undefined
+          }
+        });
+      toastSuccess('successfully update partner!');
+    } catch (error) {
+      toastErrorWrapper(
+        error,
+        'error while updating partner!'
+      );
+    } finally {
+      loadingActiveDetail = false;
+    }
+  }
+
+  async function deleteRow(id: string) {
+    const confirmation = confirm('Are you sure want to delete this row?');
+    if (confirmation) {
+      try {
+        loadingActiveList = true;
+        await masterlistService
+          .call('partnerType.delete', {
+            params: { id }
+          });
+        activeDetailFetched = false;
+        activeDetail = activeDetailDefault();
+        toastSuccess('successfully delete partner!');
+      } catch (error) {
+        toastErrorWrapper(
+          error,
+          'error while deleting partner!'
+        );
+      } finally {
+        loadingActiveList = false;
+      }
     }
   }
 
@@ -120,16 +236,18 @@
       );
     }
   }
+  // #endregion
 
   onMount(async () => {
     if (params.id) {
       await openDetail(params.id);
     }
     await fetchList();
+
     // fetch other items from relationship
     await fetchPartnerTypes();
 
-    // event registeration
+    // event registration
     const partnerTypeModal = document.querySelector('#partnerTypeModal');
     partnerTypeModal.addEventListener('hidden.bs.modal', async function() {
       await fetchPartnerTypes();
@@ -137,14 +255,14 @@
   });
 </script>
 
+<!-- PAGE COMPONENT -->
 <div id="toast" aria-live="polite" aria-atomic="true" class="position-relative"></div>
-
 <h1>Partner</h1>
 
 <!-- FORM -->
 <div class="card mb-3">
   <div class="card-header">
-    {#if activeDetail}
+    {#if activeDetailFetched}
       <span class="badge bg-warning">Update</span>
     {:else}
       <span class="badge bg-success">New</span>
@@ -160,7 +278,9 @@
       </div>
     {:else}
     <form
-      on:submit|preventDefault={handleFormSubmit}
+      on:submit|preventDefault={async () => {
+        await handleFormSubmit(activeDetailFetched ? SUBMIT_TYPE.UPDATE : SUBMIT_TYPE.CREATE)
+      }}
       class="row g-3"
       style="height: 400px; overflow-y: auto;">
       <div class="col-md-4">
@@ -172,7 +292,7 @@
           id="inputName"
           type="text"
           class="form-control"
-          value={activeDetail?.name || ""}
+          bind:value={activeDetail.name}
           required>
       </div>
       <div class="col-md-4">
@@ -184,7 +304,7 @@
           id="inputAddress"
           type="text"
           class="form-control"
-          value={activeDetail?.address || ""}>
+          bind:value={activeDetail.address}>
       </div>
       <div class="col-md-4">
         <label
@@ -195,7 +315,7 @@
           id="inputContact"
           type="text"
           class="form-control"
-          value={activeDetail?.contact || ""}
+          bind:value={activeDetail.contact}
           required>
       </div>
       <div class="col-md-11">
@@ -208,14 +328,8 @@
             partnerTypes
               .map((o) => ({ value: o.id, label: o.name }))
           }
-          value={
-            !activeDetail
-              ? []
-              : activeDetail
-                  .partnerTypes
-                  .map((o) => ({ value: o.id, label: o.name }))
-          }
-          on:select={handleSelect}
+          value={activeDropdownPartnerTypesValue}
+          on:select={handleActiveDropdownPartnerTypeSelect}
           isMulti={true}
           isClearable={false}
         ></Select>
@@ -238,9 +352,9 @@
           class="form-control"
           id="inputDescription"
           rows="3"
-          value={activeDetail?.description || ""}></textarea>
+          bind:value={activeDetail.description}></textarea>
       </div>
-        {#if activeDetail}
+        {#if activeDetailFetched}
           <div class="col-md-12">
             <div class="d-grid gap-2 col-6 mx-auto">
               <button
@@ -282,10 +396,13 @@
         <button
           class="btn btn-primary"
           type="submit"
-        >{activeDetail ? 'Update' : 'Add'}</button>
-        {#if activeDetail}
+        >{activeDetailFetched ? SUBMIT_TYPE.UPDATE : SUBMIT_TYPE.CREATE }</button>
+        {#if activeDetailFetched}
           <button
-            on:click={() => {activeDetail = null}}
+            on:click={() => {
+              activeDetail = activeDetailDefault();
+              activeDetailFetched = false;
+            }}
             class="btn btn-outline-danger"
             type="button"
           >Cancel</button>
@@ -300,9 +417,23 @@
 <div class="card mb-3">
   <div class="card-header">
     <span class="badge bg-primary">List</span> Partner
+    <div class="float-end">
+      <button
+        id="refresh-partnerType"
+        type="button"
+        class="btn btn-success btn-sm"
+        on:click={async () => await fetchList()}
+      ><Icon name="arrow-clockwise" />
+      </button>
+      <Tooltip
+        target="refresh-partnerType"
+        placement="left"
+      >Refresh the list</Tooltip>
+    </div>
   </div>
   <div class="card-body p-3">
     <div class="row">
+      <!-- search form -->
       <div class="col-md-3">
         <input
           type="text"
@@ -310,7 +441,8 @@
           bind:value={searchFormValue}
           placeholder="Search">
       </div>
-      <div class="col-md-9">
+      <!-- search selectors -->
+      <div class="col-md-6">
         <input
           type="radio"
           class="btn-check"
@@ -318,9 +450,7 @@
           id="searchByName"
           autocomplete="off"
           checked={searchBy==='name'}
-          on:change={(e) => {
-            searchBy = e.currentTarget.value;
-          }}
+          on:change={(e) => searchBy = e.currentTarget.value }
           on:click={(e) => {
             if (searchBy === e.currentTarget.value) {
               searchBy = "";
@@ -338,9 +468,7 @@
           id="searchByAddress"
           autocomplete="off"
           checked={searchBy==='address'}
-          on:change={(e) => {
-            searchBy = e.currentTarget.value;
-          }}
+          on:change={(e) => searchBy = e.currentTarget.value }
           on:click={(e) => {
             if (searchBy === e.currentTarget.value) {
               searchBy = "";
@@ -358,9 +486,7 @@
           id="searchByContact"
           autocomplete="off"
           checked={searchBy==='contact'}
-          on:change={(e) => {
-            searchBy = e.currentTarget.value;
-          }}
+          on:change={(e) => searchBy = e.currentTarget.value }
           on:click={(e) => {
             if (searchBy === e.currentTarget.value) {
               searchBy = "";
@@ -371,6 +497,26 @@
           class="btn btn-outline-success"
           for="searchByContact"
         >Contact</label>
+      </div>
+      <!-- maximum rows -->
+      <div class="col-md-3">
+        <div class="row">
+          <label
+            for="#selectMaxRows"
+            class="col-lg-4 col-form-label">Shows</label>
+          <div class="col-lg-8">
+            <select
+              id="selectMaxRows"
+              class="form-select"
+              aria-label="select max rows showing"
+              bind:value={payloadList.query.pagination.limit}
+              on:change={async () => await fetchList()}>
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </select>
+          </div>
+        </div>
       </div>
       <div class="col-md-6 mt-3">
         <label
@@ -413,6 +559,7 @@
             <th scope="col">Description</th>
             <th scope="col">Created</th>
             <th scope="col">Last Modified</th>
+            <th scope="col">#</th>
           </tr>
         </thead>
         <tbody>
@@ -433,6 +580,17 @@
               </td>
               <td class="text-nowrap text-muted">
                 { dayjs(item.updatedAt).format('DD/MM/YYYY HH:mm:ss') }
+              </td>
+              <td class="text-nowrap">
+                <button
+                  type="button"
+                  class="btn btn-danger btn-sm"
+                  on:click={async () => {
+                    await deleteRow(item.id);
+                    await fetchList();
+                  }}
+                ><Icon name="trash-fill" />
+                </button>
               </td>
             </tr>
           {/each}
