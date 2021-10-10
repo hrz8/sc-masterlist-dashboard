@@ -25,7 +25,18 @@
   // domain props
   let activeList = [] as Partner[];
   let activeDetail = null as Partner;
-  let payloadList = {} as EndpointPayload;
+  let payloadList = {
+    query: {
+      sort: {
+        by: "updatedAt",
+        mode: "desc"
+      },
+      pagination: {
+        page: 1,
+        limit: 10
+      }
+    }
+  } as EndpointPayload;
   let searchFormValue = "";
   let searchBy = "";
   let searchPartnerTypes = [] as string[];
@@ -46,22 +57,34 @@
     searchPartnerTypes = e.detail.map((v) => v.value);
   }
 
-  async function handleSearchClick() {
-    payloadList = {}
+  $: {
     if (searchBy !== "" && searchFormValue !== "") {
-      payloadList = {
-        query: {
-          [searchBy]: {
-            like: searchFormValue,
-          }
-        }
-      }
+      payloadList.query[searchBy] = {
+        like: searchFormValue
+      };
     };
     if (searchPartnerTypes.length) {
       payloadList.query['partnerTypes'] = { in: searchPartnerTypes };
     }
-    await fetchList(payloadList);
+    console.log(payloadList);
   }
+
+  // async function handleSearchClick() {
+  //   payloadList = {}
+  //   if (searchBy !== "" && searchFormValue !== "") {
+  //     payloadList = {
+  //       query: {
+  //         [searchBy]: {
+  //           like: searchFormValue
+  //         }
+  //       }
+  //     }
+  //   };
+  //   if (searchPartnerTypes.length) {
+  //     payloadList.query['partnerTypes'] = { in: searchPartnerTypes };
+  //   }
+  //   await fetchList();
+  // }
 
   // method -> services related
   async function openDetail(id: string) {
@@ -88,10 +111,10 @@
     }
   }
 
-  async function fetchList(payload: EndpointPayload = null) {
+  async function fetchList() {
     try {
       const { data } = await masterlistService
-        .call<Partner[]>('partner.list', payload);
+        .call<Partner[]>('partner.list', payloadList);
       activeList = data;
       toastSuccess('successfully fetch partner list!');
     } catch (error) {
@@ -397,7 +420,7 @@
       </div>
       <div class="col-md-12 mt-2 mb-5">
         <button
-          on:click={async () => await handleSearchClick()}
+          on:click={async () => await fetchList()}
           class="btn btn-primary"
           type="button"
         >Search</button>

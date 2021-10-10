@@ -35,7 +35,7 @@
         limit: 10
       }
     }
-  };
+  } as EndpointPayload;
   let searchBy = "";
   let searchFormValue = "";
 
