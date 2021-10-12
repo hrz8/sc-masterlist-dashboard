@@ -607,6 +607,53 @@
   </div>
 </div>
 
+<!-- PAGINATION -->
+<div class="float-end">
+  <nav aria-label="Page navigation example">
+    <ul class="pagination">
+      <li class="page-item {payloadList.query.pagination.page === 1 ? 'disabled' : ''}">
+        <button
+          class="page-link"
+          aria-label="Previous"
+          on:click={async () => {
+            payloadList.query.pagination.page--;
+            await fetchList();
+          }}
+        >
+          <span aria-hidden="true">&laquo;</span>
+        </button>
+      </li>
+      {#each Array(totalPage) as _, i }
+        <li
+          class="page-item {payloadList.query.pagination.page === i + 1 ? 'active' : ''}">
+          <button
+            class="page-link"
+            on:click={async () => {
+              if (payloadList.query.pagination.page !== i + 1) {
+                payloadList.query.pagination.page = i + 1;
+                await fetchList();
+              }
+            }}
+          >{i + 1}</button>
+        </li>
+      {/each}
+      <li
+        class="page-item {payloadList.query.pagination.page === totalPage ? 'disabled' : ''}">
+        <button
+          class="page-link"
+          aria-label="Next"
+          on:click={async () => {
+            payloadList.query.pagination.page++;
+            await fetchList();
+          }}
+        >
+          <span aria-hidden="true">&raquo;</span>
+        </button>
+      </li>
+    </ul>
+  </nav>
+</div>
+
 <!-- PARTNER TYPE MODAL -->
 <div
   id="partnerTypeModal" 
