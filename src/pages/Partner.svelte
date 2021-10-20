@@ -56,8 +56,8 @@
   let payloadList: EndpointPayload = payloadListDefault();
 
   // active relation props
-  let activeDropdownPartnerTypesList = [] as string[];
-  let activeDropdownPartnerTypesValue = [] as {
+  let activeDropdownPartnerTypesValueToSend = [] as string[];
+  let activeDropdownPartnerTypesObjList = [] as {
     label: string,
     value: string
   }[];
@@ -79,8 +79,8 @@
       }[]
     }
   ) {
-    activeDropdownPartnerTypesList = event.detail.map((o) => o.value);
-    activeDropdownPartnerTypesValue = event.detail;
+    activeDropdownPartnerTypesValueToSend = event.detail.map((o) => o.value);
+    activeDropdownPartnerTypesObjList = event.detail;
   }
 
   async function handleFormSubmit(type: SUBMIT_TYPE) {
@@ -100,7 +100,7 @@
   $: {
     // detail handler
     if (activeDetailFetched) {
-      activeDropdownPartnerTypesValue = activeDetail
+      activeDropdownPartnerTypesObjList = activeDetail
         .partnerTypes
         .map((o) => ({ value: o.id, label: o.name }));
     }
@@ -163,11 +163,11 @@
         .call<Partner>('partner.create', {
           data: {
             ...activeDetail,
-            partnerTypes: activeDropdownPartnerTypesList
+            partnerTypes: activeDropdownPartnerTypesValueToSend
           }
         });
       activeDetail = activeDetailDefault();
-      activeDropdownPartnerTypesList = [];
+      activeDropdownPartnerTypesValueToSend = [];
       toastSuccess('successfully create partner!');
     } catch (error) {
       toastErrorWrapper(
@@ -187,7 +187,7 @@
           params: { id: activeDetail.id },
           data: {
             ...activeDetail,
-            partnerTypes: activeDropdownPartnerTypesList,
+            partnerTypes: activeDropdownPartnerTypesValueToSend,
             materials: undefined
           }
         });
@@ -213,7 +213,7 @@
           });
         activeDetailFetched = false;
         activeDetail = activeDetailDefault();
-        activeDropdownPartnerTypesList = [];
+        activeDropdownPartnerTypesValueToSend = [];
         toastSuccess('successfully delete partner!');
       } catch (error) {
         toastErrorWrapper(
@@ -226,10 +226,12 @@
     }
   }
 
+  // external services
+
   async function fetchPartnerTypes() {
     try {
       const { data }= await masterlistService
-        .call<PartnerType[]>('partnerType.list', );
+        .call<PartnerType[]>('partnerType.list');
       partnerTypes = data;
       toastSuccess('successfully fetch partner type list!');
     } catch (error) {
@@ -332,7 +334,7 @@
             partnerTypes
               .map((o) => ({ value: o.id, label: o.name }))
           }
-          value={activeDropdownPartnerTypesValue}
+          value={activeDropdownPartnerTypesObjList}
           on:select={handleActiveDropdownPartnerTypeSelect}
           isMulti={true}
           isClearable={false}

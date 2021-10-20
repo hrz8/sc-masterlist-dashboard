@@ -54,11 +54,40 @@
   let activeDetail: Material = activeDetailDefault();
   let payloadList: EndpointPayload = payloadListDefault();
 
+  // active relation props
+  let activeDropdownMakerValueToSend = null;
+  let activeDropdownMakerObj = null as {
+    label: string,
+    value: string
+  };
+  let activeDropdownMaterialGradeValueToSend = null;
+  let activeDropdownMaterialGradeObj = null as {
+    label: string,
+    value: string
+  };
+
   // search form
   let searchBy = "";
   let searchFormValue = "";
 
+  // external domain props
+  let makers = [] as Partner[];
+  let materialGrades = [] as MaterialGrade[];
+
   $: {
+    // detail handler
+    if (activeDetailFetched) {
+      activeDropdownMakerObj = {
+        value: activeDetail?.maker?.id,
+        label: activeDetail?.maker?.name
+      }
+      activeDropdownMaterialGradeObj = {
+        value: activeDetail?.materialGrade?.id,
+        label: activeDetail?.materialGrade?.code
+      }
+    }
+
+    // payload handler
     payloadList = payloadListDefault();
     if (searchBy !== "" && searchFormValue !== "") {
       payloadList.query[searchBy] = {
@@ -68,6 +97,30 @@
   }
 
   // #region component event handlers
+  function handleActiveDropdownMakerSelect(
+    event: {
+      detail: {
+        label: string,
+        value: string
+      }
+    }
+  ) {
+    activeDropdownMakerValueToSend = event.detail.value;
+    activeDropdownMakerObj = event.detail;
+  }
+
+  function handleActiveDropdownMaterialGradeSelect(
+    event: {
+      detail: {
+        label: string,
+        value: string
+      }
+    }
+  ) {
+    activeDropdownMaterialGradeValueToSend = event.detail.value;
+    activeDropdownMaterialGradeObj = event.detail;
+  }
+
   async function handleFormSubmit(type: SUBMIT_TYPE) {
     if (type === SUBMIT_TYPE.CREATE) {
       await createNewRow();
@@ -124,9 +177,15 @@
       loadingActiveDetail = true;
       await masterlistService
         .call<Material>('material.create', {
-          data: activeDetail
+          data: {
+            ...activeDetail,
+            maker: activeDropdownMakerValueToSend,
+            materialGrade: activeDropdownMaterialGradeValueToSend
+          }
         });
       activeDetail = activeDetailDefault();
+      activeDropdownMakerValueToSend = null;
+      activeDropdownMaterialGradeValueToSend = null;
       toastSuccess('successfully create material!');
     } catch (error) {
       toastErrorWrapper(
@@ -146,8 +205,8 @@
           params: { id: activeDetail.id },
           data: {
             ...activeDetail,
-            maker: activeDetail.maker.id,
-            materialGrade: activeDetail.materialGrade.id
+            maker: activeDropdownMakerValueToSend,
+            materialGrade: activeDropdownMaterialGradeValueToSend
           }
         });
       toastSuccess('successfully update partner type!');
@@ -183,6 +242,36 @@
       }
     }
   }
+
+  async function fetchMakers() {
+    try {
+      const { data }= await masterlistService
+        .call<Partner[]>('partner.list');
+      makers = data;
+      toastSuccess('successfully fetch maker list!');
+    } catch (error) {
+      makers = [];
+      toastErrorWrapper(
+        error,
+        'error while fetch partner list!'
+      );
+    }
+  }
+
+  async function fetchMaterialGrades() {
+    try {
+      const { data }= await masterlistService
+        .call<MaterialGrade[]>('materialGrade.list', );
+      materialGrades = data;
+      toastSuccess('successfully fetch material grade list!');
+    } catch (error) {
+      materialGrades = [];
+      toastErrorWrapper(
+        error,
+        'error while fetch material grade list!'
+      );
+    }
+  }
   // #endregion
 
   // #region svelte events
@@ -191,6 +280,10 @@
       await openDetail(params.id);
     }
     await fetchList();
+
+    // fetch other items from relationship
+    await fetchMakers();
+    await fetchMaterialGrades();
   });
   // #endregion
 </script>
@@ -207,7 +300,7 @@
     {:else}
       <span class="badge bg-success">New</span>
     {/if}
-    Partner Type
+    Material
   </div>
   <div class="card-body">
     {#if loadingActiveDetail}
@@ -245,6 +338,34 @@
             id="inputDescription"
             rows="3"
             bind:value={activeDetail.description}></textarea>
+        </div>
+        <div class="col-md-12">
+          <label
+            for="selectType"
+            class="form-label"
+          >Maker</label>
+          <Select
+            items={
+              makers
+                .map((o) => ({ value: o.id, label: o.name }))
+            }
+            value={activeDropdownMakerObj}
+            on:select={handleActiveDropdownMakerSelect}
+          ></Select>
+        </div>
+        <div class="col-md-11">
+          <label
+            for="selectType"
+            class="form-label"
+          >Material Grade</label>
+          <Select
+            items={
+              materialGrades
+                .map((o) => ({ value: o.id, label: o.code }))
+            }
+            value={activeDropdownMaterialGradeObj}
+            on:select={handleActiveDropdownMaterialGradeSelect}
+          ></Select>
         </div>
         <div class="col-12">
           <button

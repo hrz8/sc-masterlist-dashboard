@@ -13,6 +13,7 @@
     '/': Home,
     '/part-list': Partlist,
     '/partner-list/:id?': PartnerList,
+    '/material-list': MaterialList,
     '/material-list/:id?': MaterialList,
     '/*': Page404
   }
