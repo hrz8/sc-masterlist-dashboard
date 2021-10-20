@@ -53,7 +53,7 @@
       <a
         id="sidebar-material-list"
         use:link
-        use:active={{path: '/material-list*', className: 'active'}}
+        use:active={{path: '/material-list/*', className: 'active'}}
         href="/material-list"  class="nav-link py-3 border-bottom">
         <Icon class="h4" name="gear-wide-connected" />
       </a>

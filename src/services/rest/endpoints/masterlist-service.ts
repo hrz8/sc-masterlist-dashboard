@@ -47,6 +47,28 @@ export const endpoints: EndpointMap = {
       method: HTTPMethod.DELETE,
       url: '/v1/partner-type/:id'
     }
+  },
+  material: {
+    list: {
+      method: HTTPMethod.GET,
+      url: '/v1/material'
+    },
+    detail: {
+      method: HTTPMethod.GET,
+      url: '/v1/material/:id'
+    },
+    create: {
+      method: HTTPMethod.POST,
+      url: '/v1/material'
+    },
+    update: {
+      method: HTTPMethod.PUT,
+      url: '/v1/material/:id'
+    },
+    delete: {
+      method: HTTPMethod.DELETE,
+      url: '/v1/material/:id'
+    }
   }
 }
 

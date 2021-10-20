@@ -573,7 +573,7 @@
             <tr
               on:click={async () => {
                 push(`/${activeRoute}/${item.id}`);
-                await openDetail(item.id)
+                await openDetail(item.id);
               }}
               style="cursor: pointer;">
               <th scope="row">{ i + 1 }</th>

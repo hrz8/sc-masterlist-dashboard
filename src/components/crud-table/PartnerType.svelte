@@ -6,8 +6,6 @@
   import type { EndpointPayload, RestAPI } from 'src/services/rest/service';
   import type PartnerType from 'src/types/domains/PartnerType';
 
-  export let params = {} as  { id: string };
-
   const masterlistService = getContext('masterlistService') as RestAPI;
   const toastSuccess = getContext('toastSuccess') as (message: string) => void;
   const toastErrorWrapper = getContext('toastErrorWrapper') as (error, message: string) => void;
@@ -175,9 +173,6 @@
 
   // #region svelte events
   onMount(async () => {
-    if (params.id) {
-      await openDetail(params.id);
-    }
     await fetchList();
   });
   // #endregion
@@ -271,7 +266,7 @@
   </div>
   <div
     class="card-body p-3"
-    style="height: 400px; overflow-y: auto;">>
+    style="height: 400px; overflow-y: auto;">
     <div class="row">
       <!-- search form -->
       <div class="col-md-3">
