@@ -103,6 +103,8 @@
       activeDropdownPartnerTypesObjList = activeDetail
         .partnerTypes
         .map((o) => ({ value: o.id, label: o.name }));
+    } else {
+      activeDropdownPartnerTypesObjList = [];
     }
     // payload handler
     payloadList = payloadListDefault();

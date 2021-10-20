@@ -27,8 +27,8 @@
     id: "",
     tsm: "",
     description: "",
-    maker: {} as Partner,
-    materialGrade: {} as MaterialGrade
+    maker: null as Partner,
+    materialGrade: null as MaterialGrade
   });
   const payloadListDefault = (): EndpointPayload => ({
     query: {
@@ -85,6 +85,9 @@
         value: activeDetail?.materialGrade?.id,
         label: activeDetail?.materialGrade?.code
       }
+    } else {
+      activeDropdownMakerObj = null;
+      activeDropdownMaterialGradeObj = null;
     }
 
     // payload handler
@@ -391,7 +394,7 @@
 <!-- TABLE -->
 <div class="card mb-3">
   <div class="card-header">
-    <span class="badge bg-primary">List</span> Partner Type
+    <span class="badge bg-primary">List</span> Material
     <div class="float-end">
       <button
         id="refresh-partnerType"
